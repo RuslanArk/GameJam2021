@@ -4,6 +4,7 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Net/UnrealNetwork.h"
 
 
 AK_BaseCharacter::AK_BaseCharacter()
@@ -17,8 +18,6 @@ AK_BaseCharacter::AK_BaseCharacter()
 	bUseControllerRotationRoll = false;
 
 	// Configure character movement
-	GetCharacterMovement()->bOrientRotationToMovement = true; // Rotate character to moving direction
-	GetCharacterMovement()->RotationRate = FRotator(0.f, 640.f, 0.f);
 	GetCharacterMovement()->bConstrainToPlane = true;
 	GetCharacterMovement()->bSnapToPlaneAtStart = true;
 	GetCharacterMovement()->SetIsReplicated(true);
@@ -41,8 +40,50 @@ AK_BaseCharacter::AK_BaseCharacter()
 	PrimaryActorTick.bStartWithTickEnabled = true;
 }
 
+void AK_BaseCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AK_BaseCharacter, BodyRotation);
+}
+
 void AK_BaseCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
 
+}
+
+void AK_BaseCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
+{
+	check(PlayerInputComponent);
+
+	PlayerInputComponent->BindAxis("MoveTop", this, &AK_BaseCharacter::MoveTop);
+	PlayerInputComponent->BindAxis("MoveRight", this, &AK_BaseCharacter::MoveRight);
+}
+
+float AK_BaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
+	AActor* DamageCauser)
+{
+	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+}
+
+void AK_BaseCharacter::MoveTop(float Value)
+{
+	if (Value != 0.0f)
+	{
+		AddMovementInput(FVector(1, 0, 0), Value * BaseData.MovementSpeedModificator);
+	}
+}
+
+void AK_BaseCharacter::MoveRight(float Value)
+{
+	if (Value != 0.0f)
+	{
+		AddMovementInput(FVector(0, 1, 0), Value * BaseData.MovementSpeedModificator);
+	}
+}
+
+void AK_BaseCharacter::TurnAtRate(float Rate)
+{
+	AddControllerYawInput(Rate * BaseData.TurnRateModificator * GetWorld()->GetDeltaSeconds());
 }

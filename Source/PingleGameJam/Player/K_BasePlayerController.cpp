@@ -23,11 +23,8 @@ void AK_BasePlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	InputComponent->BindAction("SetDestination", IE_Pressed, this, &AK_BasePlayerController::OnSetDestinationPressed);
-	InputComponent->BindAction("SetDestination", IE_Released, this, &AK_BasePlayerController::OnSetDestinationReleased);
-
-	InputComponent->BindTouch(EInputEvent::IE_Pressed, this, &AK_BasePlayerController::MoveToTouchLocation);
-	InputComponent->BindTouch(EInputEvent::IE_Repeat, this, &AK_BasePlayerController::MoveToTouchLocation);
+	InputComponent->BindAction("UseAction", IE_Pressed, this, &AK_BasePlayerController::OnUseActionPressed);
+	InputComponent->BindAction("UseAction", IE_Released, this, &AK_BasePlayerController::OnUseActionReleased);
 }
 
 void AK_BasePlayerController::MoveToTouchLocation(const ETouchIndex::Type FingerIndex, const FVector Location)
@@ -43,12 +40,12 @@ void AK_BasePlayerController::MoveToTouchLocation(const ETouchIndex::Type Finger
 	}
 }
 
-void AK_BasePlayerController::OnSetDestinationPressed()
+void AK_BasePlayerController::OnUseActionPressed()
 {
-	bMoveToMouseCursor = true;
+	
 }
 
-void AK_BasePlayerController::OnSetDestinationReleased()
+void AK_BasePlayerController::OnUseActionReleased()
 {
-	bMoveToMouseCursor = false;
+	
 }

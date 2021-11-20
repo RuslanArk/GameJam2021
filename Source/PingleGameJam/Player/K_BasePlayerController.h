@@ -10,9 +10,6 @@ class AK_BasePlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
-protected:
-	uint32 bMoveToMouseCursor : 1;
-
 public:
 	AK_BasePlayerController();
 
@@ -22,8 +19,8 @@ protected:
 
 	void MoveToTouchLocation(const ETouchIndex::Type FingerIndex, const FVector Location);
 
-	void OnSetDestinationPressed();
-	void OnSetDestinationReleased();
+	void OnUseActionReleased();
+	void OnUseActionPressed();
 };
 
 
