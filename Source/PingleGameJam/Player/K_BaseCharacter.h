@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "K_BaseCharacterAnimInstance.h"
 #include "GameFramework/Character.h"
 #include "K_BaseCharacter.generated.h"
 
@@ -61,6 +62,7 @@ public:
 	
 	void TurnAtRate(float Rate);
 	
+	UK_BaseCharacterAnimInstance* GetAnimInstance() const { return Cast<UK_BaseCharacterAnimInstance>(GetMesh()->GetAnimInstance()); }
 	class UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent; }
 	class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
