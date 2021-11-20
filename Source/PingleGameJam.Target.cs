@@ -9,6 +9,6 @@ public class PingleGameJamTarget : TargetRules
 	{
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
-		ExtraModuleNames.AddRange( new string[] { "PingleGameJam" } );
+		ExtraModuleNames.AddRange( new string[] { "PingleGameJam", "Core", "CoreUObject", "Engine", "InputCore" } );
 	}
 }
