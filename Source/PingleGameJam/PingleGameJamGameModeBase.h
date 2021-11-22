@@ -6,12 +6,13 @@
 #include "GameFramework/GameModeBase.h"
 #include "PingleGameJamGameModeBase.generated.h"
 
-/**
- * 
- */
+
 UCLASS()
 class PINGLEGAMEJAM_API APingleGameJamGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
+
+public:
+	APingleGameJamGameModeBase();
 	
 };

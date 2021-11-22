@@ -3,3 +3,7 @@
 
 #include "PingleGameJamGameModeBase.h"
 
+APingleGameJamGameModeBase::APingleGameJamGameModeBase()
+{
+	// TODO : Set default pawn class
+}
