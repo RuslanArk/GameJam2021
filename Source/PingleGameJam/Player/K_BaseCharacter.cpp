@@ -71,6 +71,7 @@ void AK_BaseCharacter::MoveTop(float Value)
 {
 	if (Value != 0.0f)
 	{
+		SetActorRotation(GetVelocity().Rotation());
 		AddMovementInput(FVector(1, 0, 0), Value * BaseData.MovementSpeedModificator);
 	}
 }
@@ -79,6 +80,7 @@ void AK_BaseCharacter::MoveRight(float Value)
 {
 	if (Value != 0.0f)
 	{
+		SetActorRotation(GetVelocity().Rotation());
 		AddMovementInput(FVector(0, 1, 0), Value * BaseData.MovementSpeedModificator);
 	}
 }
