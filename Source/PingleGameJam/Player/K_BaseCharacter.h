@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "K_BaseCharacterAnimInstance.h"
 #include "GameFramework/Character.h"
+#include "PingleGameJam/K_Support.h"
 #include "K_BaseCharacter.generated.h"
 
 
@@ -11,22 +12,19 @@ struct FK_CharacterData
 {
 	GENERATED_BODY()
 
-public:
-	// GENERAL PARAMETERS
-	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "CharacterData")
-	float Health = 100;
+	FK_FloatParameter Health = FK_FloatParameter(100);
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "CharacterData")
-	float Stamina = 100;
+	FK_FloatParameter Stamina = FK_FloatParameter(100);
 	
-
-	// MOVEMENT PARAMETERS
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "CharacterData")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "CharacterSetup")
 	float MovementSpeedModificator = 1.0f;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "CharacterData")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "CharacterSetup")
 	float TurnRateModificator = 1.0f;
 };
+
+
+DECLARE_EVENT(AK_BaseCharacter, FK_EventOnCharacterDied)
 
 
 UCLASS(Blueprintable)
@@ -34,11 +32,14 @@ class AK_BaseCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+public:
+	FK_EventOnCharacterDied EventOnCharacterDied;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MainCharacterData")
-	FK_CharacterData BaseData;
+	FK_CharacterData CharacterData;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, ReplicatedUsing = OnBodyRotationReplicated)
 	float BodyRotation = 1.0f;
 
 private:
@@ -55,29 +56,32 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	virtual void BeginPlay() override;
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
-	
+
+protected:
 	void MoveTop(float Value);
 	void MoveRight(float Value);
 	
-	void TurnAtRate(float Rate);
+	void TurnRight(float Rate); // use this function for update rotation to target rotation on server side
+
+	virtual void OnCharacterDied();
+
+	void SetNewBodyRotation(float& NewBodyRotation);
 	
 	UK_BaseCharacterAnimInstance* GetAnimInstance() const { return Cast<UK_BaseCharacterAnimInstance>(GetMesh()->GetAnimInstance()); }
 	class UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent; }
 	class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
-
-	// MODIFIED PARAMETERS
+	UFUNCTION()
+	virtual void OnHealthChanged(float OldHealth, float NewHealth);
 	
-	// Health
-	float GetHealth() const { return BaseData.Health; }
-	void SetHealth(const float NewHealth) { BaseData.Health = NewHealth; }
-	void AddHealth(const float AddCountHealth) { SetHealth(GetHealth() + AddCountHealth); }
-	void SubtractHealth(const float SubtractCountHealth) { SetHealth(GetHealth() + SubtractCountHealth); }
-	// Stamina
-	float GetStamina() const { return BaseData.Stamina; }
-	void SetStamina(const float NewStamina) { BaseData.Stamina = NewStamina; }
-	void AddStamina(const float AddCountStamina) { SetStamina(GetStamina() + AddCountStamina); }
-	void SubtractStamina(const float SubtractCountStamina) { SetStamina(GetStamina() + SubtractCountStamina); }
+	UFUNCTION()
+	void OnBodyRotationReplicated(float& OldParameter);
+	
+	UFUNCTION(BlueprintCallable, Category = "CharacterParameters")
+	float GetHealth() const { return CharacterData.Health.GetData(); }
+	UFUNCTION(BlueprintCallable, Category = "CharacterParameters")
+	float GetStamina() const { return CharacterData.Stamina.GetData(); }
 };
 
