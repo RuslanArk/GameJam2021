@@ -13,12 +13,6 @@ AK_BasePlayerController::AK_BasePlayerController()
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
 }
 
-void AK_BasePlayerController::PlayerTick(float DeltaTime)
-{
-	Super::PlayerTick(DeltaTime);
-
-}
-
 void AK_BasePlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
@@ -27,22 +21,30 @@ void AK_BasePlayerController::SetupInputComponent()
 	InputComponent->BindAction("UseAction", IE_Released, this, &AK_BasePlayerController::OnUseActionReleased);
 }
 
-void AK_BasePlayerController::MoveToTouchLocation(const ETouchIndex::Type FingerIndex, const FVector Location)
+void AK_BasePlayerController::BeginPlay()
 {
-	FVector2D ScreenSpaceLocation(Location);
+	Super::BeginPlay();
+	
+	SetShowMouseCursor(true);
+}
 
-	// Trace to see what is under the touch location
-	FHitResult HitResult;
-	GetHitResultAtScreenPosition(ScreenSpaceLocation, CurrentClickTraceChannel, true, HitResult);
-	if (HitResult.bBlockingHit)
-	{
-		
-	}
+void AK_BasePlayerController::PlayerTick(float DeltaTime)
+{
+	Super::PlayerTick(DeltaTime);
+
 }
 
 void AK_BasePlayerController::OnUseActionPressed()
 {
-	
+	// Trace to see what is under the mouse cursor
+	FHitResult Hit;
+	GetHitResultUnderCursor(ECC_Visibility, false, Hit);
+
+	if (Hit.bBlockingHit)
+	{
+		// We hit something, move there
+		//SetNewMoveDestination(Hit.ImpactPoint);
+	}
 }
 
 void AK_BasePlayerController::OnUseActionReleased()
