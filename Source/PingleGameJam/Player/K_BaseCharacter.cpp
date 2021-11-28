@@ -137,7 +137,7 @@ void AK_BaseCharacter::OnHealthChanged(float OldHealth, float NewHealth)
 	}
 }
 
-void AK_BaseCharacter::OnBodyRotationReplicated(float& OldParameter)
+void AK_BaseCharacter::OnRep_BodyRotation(float& OldParameter)
 {
 	SetNewBodyRotation(BodyRotation);
 }

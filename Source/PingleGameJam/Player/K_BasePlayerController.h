@@ -14,13 +14,12 @@ public:
 	AK_BasePlayerController();
 
 protected:
-	virtual void PlayerTick(float DeltaTime) override;
 	virtual void SetupInputComponent() override;
+	virtual void BeginPlay() override;
+	virtual void PlayerTick(float DeltaTime) override;
 
-	void MoveToTouchLocation(const ETouchIndex::Type FingerIndex, const FVector Location);
-
-	void OnUseActionReleased();
+	UFUNCTION()
 	void OnUseActionPressed();
+	UFUNCTION()
+	void OnUseActionReleased();
 };
-
-

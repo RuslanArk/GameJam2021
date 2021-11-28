@@ -39,7 +39,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "MainCharacterData")
 	FK_CharacterData CharacterData;
 
-	UPROPERTY(Replicated, ReplicatedUsing = OnBodyRotationReplicated)
+	UPROPERTY(Replicated, ReplicatedUsing = OnRep_BodyRotation)
 	float BodyRotation = 1.0f;
 
 private:
@@ -77,7 +77,7 @@ protected:
 	virtual void OnHealthChanged(float OldHealth, float NewHealth);
 	
 	UFUNCTION()
-	void OnBodyRotationReplicated(float& OldParameter);
+	void OnRep_BodyRotation(float& OldParameter);
 	
 	UFUNCTION(BlueprintCallable, Category = "CharacterParameters")
 	float GetHealth() const { return CharacterData.Health.GetData(); }
