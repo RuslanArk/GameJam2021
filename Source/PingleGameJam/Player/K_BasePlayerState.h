@@ -17,9 +17,11 @@ protected:
 
 public:
 	AK_BasePlayerState();
-	
-	AK_BaseCharacter* GetCharacter() const { return LinkOnCharacter; }
+
 	void SetCharacter(AK_BaseCharacter* NewCharacterLink) { LinkOnCharacter = NewCharacterLink; }
+
+	UFUNCTION(BlueprintCallable)
+	AK_BaseCharacter* GetCharacter() const { return LinkOnCharacter; }
 
 protected:
 	UFUNCTION()
