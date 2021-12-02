@@ -43,7 +43,6 @@ void UGJGameInstance::Init()
 			SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UGJGameInstance::OnOnlineSessionDestroyed);
 			SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UGJGameInstance::OnFindSessionsComplete);
 			SessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &UGJGameInstance::OnJoinSessionComplete);
-
 		}		
 	}
 	else
