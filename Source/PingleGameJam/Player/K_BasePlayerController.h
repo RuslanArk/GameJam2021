@@ -22,4 +22,10 @@ protected:
 	void OnUseActionPressed();
 	UFUNCTION()
 	void OnUseActionReleased();
+
+	UFUNCTION(Server, Reliable)
+	void Server_UpdateCursorLocation(FVector Location);
+
+private:
+	FVector Server_MouseCursor;
 };
