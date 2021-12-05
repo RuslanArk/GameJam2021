@@ -43,25 +43,25 @@ AK_BaseCharacter::AK_BaseCharacter()
 	if (MainAbilityClass)
 	{
 		MainAbility = NewObject<UK_BaseAbility>(MainAbilityClass.Get());
-		if (MainAbility) { MainAbility->Init(); }
+		if (MainAbility) { MainAbility->Init(this); }
 	}
 
 	if (Ability1Class)
 	{
 		Ability1 = NewObject<UK_BaseAbility>(Ability1Class.Get());
-		if (Ability1) { Ability1->Init(); }
+		if (Ability1) { Ability1->Init(this); }
 	}
 
 	if (Ability2Class)
 	{
 		Ability2 = NewObject<UK_BaseAbility>(Ability2Class.Get());
-		if (Ability2) { Ability2->Init(); }
+		if (Ability2) { Ability2->Init(this); }
 	}
 	
 	if (Ability3Class)
 	{
 		Ability3 = NewObject<UK_BaseAbility>(Ability3Class.Get());
-		if (Ability3) { Ability3->Init(); }
+		if (Ability3) { Ability3->Init(this); }
 	}
 }
 

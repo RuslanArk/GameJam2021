@@ -8,8 +8,9 @@ UK_BaseAbility::UK_BaseAbility()
 	
 }
 
-void UK_BaseAbility::Init()
+void UK_BaseAbility::Init(AK_BaseCharacter* Owner)
 {
+	MyOwner = Owner;
 	UObject::GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &UK_BaseAbility::Tick_Cooldown, CooldownTickRate, true, 0.1f);
 }
 
@@ -45,7 +46,13 @@ bool UK_BaseAbility::StopAbility()
 
 bool UK_BaseAbility::CanActivateAbility()
 {
-	return CurrentCooldown <= 0 && !IsActive;
+	return MyOwner && CurrentCooldown <= 0 && !IsActive;
+}
+
+void UK_BaseAbility::RestartCooldownIfItIsActive()
+{
+	ZeroedCooldown();
+	ActivateCooldown();
 }
 
 void UK_BaseAbility::ActivateCooldown()

@@ -9,9 +9,14 @@ UK_BaseIntimidationAbility::UK_BaseIntimidationAbility()
 
 bool UK_BaseIntimidationAbility::ActivateAbility()
 {
-	if (Super::ActivateAbility())
+	if (CanActivateAbility() && Super::ActivateAbility())
 	{
+		ActivateCooldown();
+		Client_ActivateAbility();
+
+		// add cast logic here
 		
+		StopAbility();
 	}
 	
 	return false;
@@ -22,7 +27,8 @@ bool UK_BaseIntimidationAbility::StopAbility()
 	return false;
 }
 
-bool UK_BaseIntimidationAbility::CanActivateAbility()
+void UK_BaseIntimidationAbility::Client_ActivateAbility_Implementation()
 {
-	return CurrentCooldown <= 0;
+	// Play animation here
+	// Play sound here
 }
