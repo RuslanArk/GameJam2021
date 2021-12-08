@@ -90,6 +90,7 @@ void UGJGameInstance::Host(FString ServerName)
 		if (ExistingSession != nullptr)
 		{
 			SessionInterface->DestroySession(NAME_GameSession);
+			CreateSession();
 		}
 		else
 		{
@@ -245,7 +246,7 @@ void UGJGameInstance::CreateSession()
 		{
 			SessionSettings.bIsLANMatch = false;
 		}	
-		SessionSettings.NumPublicConnections = 5;
+		SessionSettings.NumPublicConnections = 4;
 		SessionSettings.bShouldAdvertise = true;
 		SessionSettings.bUsesPresence = true;
 		SessionSettings.Set(SERVER_NAME_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
