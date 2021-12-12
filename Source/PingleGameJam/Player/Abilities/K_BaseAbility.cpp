@@ -49,10 +49,13 @@ bool UK_BaseAbility::CanActivateAbility()
 	return MyOwner && CurrentCooldown <= 0 && !IsActive;
 }
 
-void UK_BaseAbility::RestartCooldownIfItIsActive()
+void UK_BaseAbility::RestartCooldownIfIsActive()
 {
-	ZeroedCooldown();
-	ActivateCooldown();
+	if (IsActive)
+	{
+		ZeroedCooldown();
+		ActivateCooldown();
+	}
 }
 
 void UK_BaseAbility::ActivateCooldown()

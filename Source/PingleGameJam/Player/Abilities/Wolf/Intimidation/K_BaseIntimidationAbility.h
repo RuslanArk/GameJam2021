@@ -16,16 +16,9 @@ protected:
 	float CastDistance = 250;
 	UPROPERTY(EditDefaultsOnly, Category = "AbilityIntimidation_Setup")
 	float EffectTime = 5;
-	//UPROPERTY(EditDefaultsOnly, Category = "AbilityIntimidation_Setup")
-	//float CastTime = 0.5;
+
+	//TODO: add animation, and play it when ability started
 
 public:
-	UK_BaseIntimidationAbility();
-	
 	virtual bool ActivateAbility() override;
-	virtual bool StopAbility() override;
-
-protected:
-	UFUNCTION(Reliable, Client)
-	void Client_ActivateAbility();
 };

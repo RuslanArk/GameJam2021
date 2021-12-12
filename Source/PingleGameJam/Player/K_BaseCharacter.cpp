@@ -1,9 +1,13 @@
 
 #include "K_BaseCharacter.h"
+
+#include "K_BasePlayerState.h"
 #include "Camera/CameraComponent.h"
 #include "Math/UnrealMathUtility.h"
 #include "Components/CapsuleComponent.h"
+#include "Framework/MultiBox/ToolMenuBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/GameStateBase.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Net/UnrealNetwork.h"
 
@@ -69,6 +73,8 @@ void AK_BaseCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME(AK_BaseCharacter, IntimidationEffect);
+	
 	DOREPLIFETIME(AK_BaseCharacter, Health);
 	DOREPLIFETIME(AK_BaseCharacter, BodyRotation);
 }
@@ -90,12 +96,16 @@ void AK_BaseCharacter::BeginPlay()
 	
 	EventOnCharacterDied.AddUObject(this, &AK_BaseCharacter::OnCharacterDied);
 	Health.OnParameterChanged.AddDynamic(this, &AK_BaseCharacter::OnHealthChanged);
+
+	GetWorldTimerManager().SetTimer(TimerHandle_EffectsTick, this, &AK_BaseCharacter::EffectsTick, CONST_CHARACTER_EFFECTS_TICK_TIME, true);
 }
 
 void AK_BaseCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
+	UpdateVisibilityOfWolf();
+	UpdateVisibilityOfTeammates();
 }
 
 float AK_BaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
@@ -115,6 +125,14 @@ float AK_BaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 }
 
+void AK_BaseCharacter::EffectsTick()
+{
+	if (IntimidationEffect)
+	{
+		IntimidationEffect = FMath::Max(IntimidationEffect - CONST_CHARACTER_EFFECTS_TICK_TIME, 0.f);
+	}
+}
+
 bool AK_BaseCharacter::CanActivateAbility(UK_BaseAbility* Ability)
 {
 	return IsValid(Ability) && CanActivateAbilityCheck(Ability);
@@ -129,6 +147,11 @@ UK_BaseAbility* AK_BaseCharacter::GetAbilityByIndex(const int32 AbilityIndex) co
 	else if (AbilityIndex == 3) { return Ability3; }
 
 	return nullptr;
+}
+
+void AK_BaseCharacter::SetLocalVisibility(bool IsVisibility)
+{
+
 }
 
 void AK_BaseCharacter::MoveTop(float Value)
@@ -192,6 +215,38 @@ void AK_BaseCharacter::OnHealthChanged(float OldHealth, float NewHealth)
 void AK_BaseCharacter::OnRep_BodyRotation(float& OldParameter)
 {
 	SetNewBodyRotation(BodyRotation);
+}
+
+void AK_BaseCharacter::UpdateVisibilityOfWolf()
+{
+	
+}
+
+void AK_BaseCharacter::UpdateVisibilityOfTeammates()
+{
+	if (AGameStateBase* const MyGameState = GetWorld() != nullptr ? GetWorld()->GetGameState<AGameStateBase>() : nullptr)
+	{
+		for (APlayerState* PS : MyGameState->PlayerArray)
+		{
+			if (AK_BasePlayerState* CastedPlayerState = Cast<AK_BasePlayerState>(PS))
+			{
+				auto PlayerCharacter = CastedPlayerState->GetCharacter();
+				if (PlayerCharacter && GetPlayerState() != CastedPlayerState) // && !CastedPlayerState->IsWolf // skip us and wolf //TODO: add check not wolf logic
+				{
+					if (IntimidationEffect)
+					{
+						//TODO: hide all teammates
+						PlayerCharacter->SetLocalVisibility(false);
+					}
+					else
+					{
+						//TODO: show all teammates
+						PlayerCharacter->SetLocalVisibility(true);
+					}
+				}
+			}
+		}
+	}
 }
 
 void AK_BaseCharacter::Server_ActivateAbility_Implementation(int32 AbilityIndex, FVector Location, AK_BaseCharacter* Target)

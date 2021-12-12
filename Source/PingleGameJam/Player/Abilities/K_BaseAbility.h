@@ -3,10 +3,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "PingleGameJam/Player/K_BaseCharacter.h"
-
 #include "K_BaseAbility.generated.h"
 
+
+class AK_BaseCharacter;
 
 UCLASS(Blueprintable)
 class UK_BaseAbility : public UObject
@@ -43,7 +43,7 @@ public:
 	virtual bool StopAbility();
 	virtual bool CanActivateAbility();
 
-	void RestartCooldownIfItIsActive(); // For Wolf ability (Intimidation)
+	void RestartCooldownIfIsActive(); // For Wolf ability (Intimidation)
 
 	UFUNCTION(BlueprintCallable, Category = "Ability_Data")
 	float GetCurrentCooldown() const { return CurrentCooldown; }

@@ -11,6 +11,9 @@
 DECLARE_EVENT(AK_BaseCharacter, FK_EventOnCharacterDied)
 
 
+#define CONST_CHARACTER_EFFECTS_TICK_TIME 0.1f
+
+
 UCLASS(Blueprintable)
 class AK_BaseCharacter : public ACharacter
 {
@@ -18,6 +21,10 @@ class AK_BaseCharacter : public ACharacter
 
 public:
 	FK_EventOnCharacterDied EventOnCharacterDied;
+
+	// All Effects (The shortest way - is a timer, when 0 - is disable)
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Effects")
+	float IntimidationEffect = 0; // UK_BaseIntimidationAbility - can not see teammates, lock abilities (reset abilities cooldown do once form ability).
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Abilities")
@@ -58,6 +65,8 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
 
+	FTimerHandle TimerHandle_EffectsTick;
+
 public:
 	AK_BaseCharacter();
 
@@ -67,6 +76,8 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+	void EffectsTick();
+	
 	UFUNCTION(BlueprintCallable, Category = "CharacterMethods")
 	bool CanActivateAbility(UK_BaseAbility* Ability);
 	UFUNCTION(BlueprintCallable, Category = "CharacterMethods")
@@ -74,6 +85,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CharacterMethods")
 	float GetHealth() const { return Health.GetData(); }
 
+	void SetLocalVisibility(bool IsVisibility);
+	
 	UFUNCTION(Server, Reliable)
 	void Server_ActivateAbility(int32 AbilityIndex, FVector Location, AK_BaseCharacter* Target);
 
@@ -97,4 +110,8 @@ protected:
 	
 	UFUNCTION()
 	void OnRep_BodyRotation(float& OldParameter);
+
+private:
+	void UpdateVisibilityOfWolf();
+	void UpdateVisibilityOfTeammates(); // Using for UK_BaseIntimidationAbility
 };
