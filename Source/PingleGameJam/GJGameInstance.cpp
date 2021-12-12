@@ -133,12 +133,12 @@ void UGJGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCom
 	}
 	
 	UEngine* Engine = GetEngine();
-	if (!ensure(Engine != nullptr)) return;
+	if (!Engine) return;
 	
 	Engine->AddOnScreenDebugMessage(0, 5, FColor::Green, FString::Printf(TEXT("Joining %s"), *Address));
 	
 	APlayerController* PlayerController = GetFirstLocalPlayerController();
-	if (!ensure(PlayerController != nullptr)) return;
+	if (!PlayerController) return;
 	
 	PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
 }
@@ -172,7 +172,7 @@ void UGJGameInstance::OnOnlineSessionCreated(FName SessionName, bool Success)
 	UWorld* World = GetWorld();
 	if (!ensure(World != nullptr)) return;
 
-	World->ServerTravel("/Game/Maps/Lobby?listen");
+	World->ServerTravel("/Game/Maps/Build1?listen");
 }
 
 void UGJGameInstance::OnOnlineSessionDestroyed(FName SessionName, bool Success)

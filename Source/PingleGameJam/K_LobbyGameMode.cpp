@@ -3,15 +3,17 @@
 
 #include "K_LobbyGameMode.h"
 
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerStart.h"
+
 #include "GJGameInstance.h"
-#include "Characters/Betty/K_BettyCharacter.h"
 #include "Player/K_BaseCharacter.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogLobbyGM, All, All);
 
 AK_LobbyGameMode::AK_LobbyGameMode()
 {
-	DefaultPawnClass = AK_BettyCharacter::StaticClass();
+	CycleIsDone = false;
 }
 
 void AK_LobbyGameMode::StartPlay()
@@ -19,7 +21,6 @@ void AK_LobbyGameMode::StartPlay()
 	Super::StartPlay();
 
 }
-
 
 void AK_LobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
@@ -30,22 +31,13 @@ void AK_LobbyGameMode::PostLogin(APlayerController* NewPlayer)
 		for (int32 i = 0; i < PlayersRoles.PlayerClasses.Num(); i++)
 		{
 			PlayersRoles.RoleIsTaken.Add(i, false);
-			UE_LOG(LogLobbyGM, Warning, TEXT("Index %i , role is given : %i"), i, static_cast<int32>(PlayersRoles.RoleIsTaken[i]));
 		}
 		CycleIsDone = true;
 	}
 
 	++NumberOfPlayers;
 	
-	if (GetWorld())
-	{
-		NewPlayer->UnPossess();
-	    AK_BaseCharacter* NewCharacter = Cast<AK_BaseCharacter>(GetWorld()->SpawnActor(GiveRandomRole()));
-		if (NewCharacter)
-		{
-			NewPlayer->Possess(NewCharacter);		
-		}
-	}
+	SpawnActorForNewcomer(NewPlayer);
 	
 	if (NumberOfPlayers == 4)
 	{
@@ -70,14 +62,13 @@ void AK_LobbyGameMode::StartGame()
 	UWorld* World = GetWorld();
 	if (!World) return;
 
-	bUseSeamlessTravel = true;	
-		
-	World->ServerTravel("/Game/Maps/MapForTests?Listen");
+	/*bUseSeamlessTravel = true;
+	World->ServerTravel("/Game/Maps/Build1?Listen", true);
+	CycleIsDone = false;*/
 }
 
-TSubclassOf<APawn> AK_LobbyGameMode::GiveRandomRole()
+TSubclassOf<AK_BaseCharacter> AK_LobbyGameMode::GiveRandomRole()
 {
-	// TODO: make better algorithm, this one is not efficient
 	if (PlayersRoles.PlayerClasses.Num() > 0 && CycleIsDone)
 	{
 		const int32 RandIndex = FMath::RandRange(0, PlayersRoles.PlayerClasses.Num() - 1);
@@ -90,4 +81,33 @@ TSubclassOf<APawn> AK_LobbyGameMode::GiveRandomRole()
 	}
 	
 	return GiveRandomRole();
+}
+
+void AK_LobbyGameMode::SpawnActorForNewcomer(APlayerController* NewPlayer)
+{
+	if (UWorld* World = GetWorld())
+	{		
+		TArray<AActor*> FoundStarts;
+		UGameplayStatics::GetAllActorsOfClass(World, PlayerStart, FoundStarts);
+
+		TArray<FTransform> SpawnPoints;
+		if (FoundStarts.Num() > 0)
+		{
+			for (AActor* Start : FoundStarts)
+			{
+				SpawnPoints.Add(Start->GetActorTransform());
+			}
+		}
+
+		FTransform SpawnTransform = SpawnPoints.Num() > 0 ? SpawnPoints[0] : FTransform(FVector::ZeroVector);
+		AK_BaseCharacter* NewCharacter = GetWorld()->SpawnActorDeferred<AK_BaseCharacter>(GiveRandomRole(), SpawnTransform);
+		if (NewCharacter)
+		{
+			NewPlayer->GetPawn()->SetLifeSpan(1.0f);
+			NewPlayer->UnPossess();
+			NewPlayer->Possess(NewCharacter);
+			NewCharacter->FinishSpawning(SpawnTransform);
+			UE_LOG(LogLobbyGM, Warning, TEXT("Controller Possessed"));
+		}
+	}
 }
