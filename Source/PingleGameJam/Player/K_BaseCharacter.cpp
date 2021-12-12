@@ -151,7 +151,7 @@ UK_BaseAbility* AK_BaseCharacter::GetAbilityByIndex(const int32 AbilityIndex) co
 
 void AK_BaseCharacter::SetLocalVisibility(bool IsVisibility)
 {
-
+	GetMesh()->SetVisibility(IsVisibility);
 }
 
 void AK_BaseCharacter::MoveTop(float Value)
