@@ -32,6 +32,20 @@ void AK_LobbyGameMode::PostLogin(APlayerController* NewPlayer)
 		{
 			PlayersRoles.RoleIsTaken.Add(i, false);
 		}
+		
+		TArray<AActor*> FoundStarts;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), PlayerStart, FoundStarts);		
+		if (FoundStarts.Num() > 0)
+		{
+			int32 Index = 0;
+			for (AActor* Start : FoundStarts)
+			{
+				SpawnSpots.Add(Start->GetActorTransform());
+				SpawnIsTaken.Add(Index, false);
+				Index++;
+			}
+		}
+		
 		CycleIsDone = true;
 	}
 
@@ -67,6 +81,22 @@ void AK_LobbyGameMode::StartGame()
 	CycleIsDone = false;*/
 }
 
+void AK_LobbyGameMode::SpawnActorForNewcomer(APlayerController* NewPlayer)
+{
+	if (UWorld* World = GetWorld())
+	{
+		FTransform SpawnSpot = FindSpawnSpot();
+		AK_BaseCharacter* NewCharacter = GetWorld()->SpawnActorDeferred<AK_BaseCharacter>(GiveRandomRole(), SpawnSpot);
+		if (NewCharacter)
+		{
+			NewPlayer->GetPawn()->SetLifeSpan(1.0f);
+			NewPlayer->UnPossess();
+			NewPlayer->Possess(NewCharacter);
+			NewCharacter->FinishSpawning(SpawnSpot);
+		}
+	}
+}
+
 TSubclassOf<AK_BaseCharacter> AK_LobbyGameMode::GiveRandomRole()
 {
 	if (PlayersRoles.PlayerClasses.Num() > 0 && CycleIsDone)
@@ -83,31 +113,16 @@ TSubclassOf<AK_BaseCharacter> AK_LobbyGameMode::GiveRandomRole()
 	return GiveRandomRole();
 }
 
-void AK_LobbyGameMode::SpawnActorForNewcomer(APlayerController* NewPlayer)
+FTransform AK_LobbyGameMode::FindSpawnSpot()
 {
-	if (UWorld* World = GetWorld())
-	{		
-		TArray<AActor*> FoundStarts;
-		UGameplayStatics::GetAllActorsOfClass(World, PlayerStart, FoundStarts);
-
-		TArray<FTransform> SpawnPoints;
-		if (FoundStarts.Num() > 0)
+	if (SpawnSpots.Num() > 0 && CycleIsDone)
+	{
+		const int32 RandIndex = FMath::RandRange(0, SpawnSpots.Num() - 1);
+		if (!SpawnIsTaken[RandIndex])
 		{
-			for (AActor* Start : FoundStarts)
-			{
-				SpawnPoints.Add(Start->GetActorTransform());
-			}
-		}
-
-		FTransform SpawnTransform = SpawnPoints.Num() > 0 ? SpawnPoints[0] : FTransform(FVector::ZeroVector);
-		AK_BaseCharacter* NewCharacter = GetWorld()->SpawnActorDeferred<AK_BaseCharacter>(GiveRandomRole(), SpawnTransform);
-		if (NewCharacter)
-		{
-			NewPlayer->GetPawn()->SetLifeSpan(1.0f);
-			NewPlayer->UnPossess();
-			NewPlayer->Possess(NewCharacter);
-			NewCharacter->FinishSpawning(SpawnTransform);
-			UE_LOG(LogLobbyGM, Warning, TEXT("Controller Possessed"));
+			SpawnIsTaken[RandIndex] = true;
+			return SpawnSpots[RandIndex];
 		}
 	}
+	return FindSpawnSpot();
 }
