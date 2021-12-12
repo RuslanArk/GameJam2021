@@ -88,6 +88,10 @@ void AK_BaseCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 	PlayerInputComponent->BindAxis("MoveTop", this, &AK_BaseCharacter::MoveTop);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AK_BaseCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("TurnAtRate", this, &AK_BaseCharacter::TurnRight);
+
+	PlayerInputComponent->BindAction("ActivateAbility1", IE_Pressed, this, &AK_BaseCharacter::ActionActivateAbility1);
+	PlayerInputComponent->BindAction("ActivateAbility2", IE_Pressed, this, &AK_BaseCharacter::ActionActivateAbility2);
+	PlayerInputComponent->BindAction("ActivateAbility3", IE_Pressed, this, &AK_BaseCharacter::ActionActivateAbility3);
 }
 
 void AK_BaseCharacter::BeginPlay()
@@ -202,6 +206,21 @@ void AK_BaseCharacter::SetNewBodyRotation(float& NewBodyRotation)
 	FRotator NewRotate = GetActorRotation();
 	NewRotate.Yaw = BodyRotation;
 	SetActorRotation(NewRotate);
+}
+
+void AK_BaseCharacter::ActionActivateAbility1()
+{
+	Server_ActivateAbility(1, FVector(), nullptr);
+}
+
+void AK_BaseCharacter::ActionActivateAbility2()
+{
+	Server_ActivateAbility(2, FVector(), nullptr);
+}
+
+void AK_BaseCharacter::ActionActivateAbility3()
+{
+	Server_ActivateAbility(3, FVector(), nullptr);
 }
 
 void AK_BaseCharacter::OnHealthChanged(float OldHealth, float NewHealth)

@@ -104,6 +104,13 @@ protected:
 	UK_BaseCharacterAnimInstance* GetAnimInstance() const { return Cast<UK_BaseCharacterAnimInstance>(GetMesh()->GetAnimInstance()); }
 	class UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent; }
 	class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+
+	UFUNCTION()
+	void ActionActivateAbility1();
+	UFUNCTION()
+	void ActionActivateAbility2();
+	UFUNCTION()
+	void ActionActivateAbility3();
 	
 	UFUNCTION()
 	virtual void OnHealthChanged(float OldHealth, float NewHealth);
