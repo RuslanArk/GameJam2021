@@ -2,11 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "K_BaseCharacterAnimInstance.h"
-#include "Abilities/K_BaseAbility.h"
 #include "GameFramework/Character.h"
 #include "PingleGameJam/K_Support.h"
 #include "K_BaseCharacter.generated.h"
 
+class UK_BaseAbility;
 
 DECLARE_EVENT(AK_BaseCharacter, FK_EventOnCharacterDied)
 
@@ -56,6 +56,9 @@ protected:
 	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadWrite, Category = "CharacterData", ReplicatedUsing = OnRep_BodyRotation)
 	float BodyRotation = 1.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float RespawnRate = 5.0f;
+
 private:
     UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
 	USkeletalMeshComponent* MainMesh;
@@ -66,6 +69,8 @@ private:
 	class USpringArmComponent* CameraBoom;
 
 	FTimerHandle TimerHandle_EffectsTick;
+
+	FTimerHandle RespawnTimer;
 
 public:
 	AK_BaseCharacter();
@@ -90,6 +95,9 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_ActivateAbility(int32 AbilityIndex, FVector Location, AK_BaseCharacter* Target);
 
+	void ActivateMainAbility();
+	
+
 protected:
 	void MoveTop(float Value);
 	void MoveRight(float Value);
@@ -110,6 +118,13 @@ protected:
 	
 	UFUNCTION()
 	void OnRep_BodyRotation(float& OldParameter);
+
+private:
+	void RespawnPlayer();	
+	
+	UFUNCTION()
+	void OnMeleeAbilitySphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+	
 
 private:
 	void UpdateVisibilityOfWolf();

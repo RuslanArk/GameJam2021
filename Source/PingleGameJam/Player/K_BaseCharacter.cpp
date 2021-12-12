@@ -6,14 +6,20 @@
 #include "Math/UnrealMathUtility.h"
 #include "Components/CapsuleComponent.h"
 #include "Framework/MultiBox/ToolMenuBase.h"
+#include "Components/SphereComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Net/UnrealNetwork.h"
 
+#include "PingleGameJam/Player/Abilities/K_BaseAbility.h"
+
+
+DEFINE_LOG_CATEGORY_STATIC(LogK_BaseCharacter, All, All);
 
 AK_BaseCharacter::AK_BaseCharacter()
 {
+	bReplicates = true;
 	// Set size for player capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -48,6 +54,7 @@ AK_BaseCharacter::AK_BaseCharacter()
 	{
 		MainAbility = NewObject<UK_BaseAbility>(MainAbilityClass.Get());
 		if (MainAbility) { MainAbility->Init(this); }
+		MainAbility->InitAnimations();
 	}
 
 	if (Ability1Class)
@@ -73,8 +80,6 @@ void AK_BaseCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AK_BaseCharacter, IntimidationEffect);
-	
 	DOREPLIFETIME(AK_BaseCharacter, Health);
 	DOREPLIFETIME(AK_BaseCharacter, BodyRotation);
 }
@@ -85,6 +90,8 @@ void AK_BaseCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 	
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	PlayerInputComponent->BindAction("ActivateMainAbility", IE_Pressed, this, &AK_BaseCharacter::ActivateMainAbility);	
+	
 	PlayerInputComponent->BindAxis("MoveTop", this, &AK_BaseCharacter::MoveTop);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AK_BaseCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("TurnAtRate", this, &AK_BaseCharacter::TurnRight);
@@ -96,6 +103,21 @@ void AK_BaseCharacter::BeginPlay()
 	
 	EventOnCharacterDied.AddUObject(this, &AK_BaseCharacter::OnCharacterDied);
 	Health.OnParameterChanged.AddDynamic(this, &AK_BaseCharacter::OnHealthChanged);
+
+	if (MainAbility)
+	{
+		MainAbility->AbilityCollision->OnComponentBeginOverlap.AddDynamic(this, &AK_BaseCharacter::OnMeleeAbilitySphereBeginOverlap);
+	}
+}
+
+void AK_BaseCharacter::ActivateMainAbility()
+{
+	if (!MainAbility) return;
+
+	if (MainAbility->CanActivateAbility())
+	{
+		MainAbility->ActivateAbility();
+	}
 
 	GetWorldTimerManager().SetTimer(TimerHandle_EffectsTick, this, &AK_BaseCharacter::EffectsTick, CONST_CHARACTER_EFFECTS_TICK_TIME, true);
 }
@@ -182,7 +204,22 @@ void AK_BaseCharacter::TurnRight(float Value)
 
 void AK_BaseCharacter::OnCharacterDied()
 {
-	// input logic here...
+	//TODO: play death animation
+	if (GetMovementComponent())
+	{
+		GetMovementComponent()->StopMovementImmediately();		
+	}
+	SetActorEnableCollision(false);	
+	SetLifeSpan(5.0f);
+
+	GetWorldTimerManager().SetTimer(RespawnTimer, this, &AK_BaseCharacter::RespawnPlayer, RespawnRate);
+	
+	EventOnCharacterDied.Broadcast();
+}
+
+void AK_BaseCharacter::RespawnPlayer()
+{
+	
 }
 
 bool AK_BaseCharacter::CanActivateAbilityCheck(UK_BaseAbility* Ability)
@@ -208,7 +245,7 @@ void AK_BaseCharacter::OnHealthChanged(float OldHealth, float NewHealth)
 {
 	if (NewHealth <= 0)
 	{
-		EventOnCharacterDied.Broadcast();
+		OnCharacterDied();
 	}
 }
 
@@ -255,5 +292,19 @@ void AK_BaseCharacter::Server_ActivateAbility_Implementation(int32 AbilityIndex,
 	if (CanActivateAbility(Ability))
 	{
 		Ability->ActivateAbility();
+	}
+}
+
+void AK_BaseCharacter::OnMeleeAbilitySphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor)
+	{
+		AK_BaseCharacter* OverlappedActor = Cast<AK_BaseCharacter>(OtherActor);
+		if (OverlappedActor)
+		{
+			OverlappedActor->TakeDamage(MainAbility->GetDamageAmount(), {}, GetController(), this);
+			UE_LOG(LogK_BaseCharacter, Warning, TEXT("%s took: %d damage"), *OverlappedActor->GetName(), MainAbility->GetDamageAmount());
+		}
 	}
 }

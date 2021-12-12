@@ -5,6 +5,7 @@
 #include "GameFramework/Character.h"
 #include "K_BaseAbility.generated.h"
 
+class USphereComponent;
 
 class AK_BaseCharacter;
 
@@ -12,6 +13,13 @@ UCLASS(Blueprintable)
 class UK_BaseAbility : public UObject
 {
 	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USphereComponent* AbilityCollision;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* AbilityMontage;
 
 protected:
 	FTimerHandle CooldownTimer;
@@ -28,6 +36,8 @@ protected:
 	float MaxCooldown = 5;
 	UPROPERTY(EditDefaultsOnly, Category = "Ability_Setup")
 	float CooldownTickRate = 0.1;
+	UPROPERTY(EditDefaultsOnly, Category = "Ability_Setup")
+	float DamageAmount = 10.0f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Ability_Setup")
 	FString AbilityName = "AbilityName";
@@ -56,10 +66,20 @@ public:
 	FString GetAbilityName() const { return AbilityName; }
 	UFUNCTION(BlueprintCallable, Category = "Ability_Data")
 	UTexture2D* GetTextureIcon() const { return TextureIcon; }
+	
+	UFUNCTION(BlueprintCallable, Category = "Attack")
+	float GetDamageAmount() { return DamageAmount; }
+
+	void InitAnimations();
 
 protected:
 	void ActivateCooldown();
 	void ZeroedCooldown();
 
 	void Tick_Cooldown();
+
+	void PlayMontage(UAnimMontage* MontageToPlay);
+	void OnAbilityActivated();
+	void OnAbilityDeactivated();
+	
 };

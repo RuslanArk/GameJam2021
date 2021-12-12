@@ -33,9 +33,12 @@ public:
 
 private:
 	uint32 NumberOfPlayers = 0;
-	FTimerHandle ServerTravelTimer;
 	bool CycleIsDone;
 
+	TMap<int32, bool> SpawnIsTaken;
+	TArray<FTransform> SpawnSpots;	
+
+	FTimerHandle ServerTravelTimer;
 	FTimerHandle SpawnTimerHandle;
 
 public:
@@ -53,6 +56,7 @@ private:
 	TSubclassOf<AK_BaseCharacter> GiveRandomRole();
 
 	void SpawnActorForNewcomer(APlayerController* NewPlayer);
+	FTransform FindSpawnSpot();
 	
 };
 
