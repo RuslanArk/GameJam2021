@@ -90,7 +90,7 @@ void AK_BaseCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 	
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAction("ActivateMainAbility", IE_Pressed, this, &AK_BaseCharacter::ActivateMainAbility);	
+	PlayerInputComponent->BindAction("ActivateMeleeAbility", IE_Pressed, this, &AK_BaseCharacter::ActivateMainAbility);	
 	
 	PlayerInputComponent->BindAxis("MoveTop", this, &AK_BaseCharacter::MoveTop);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AK_BaseCharacter::MoveRight);
@@ -121,6 +121,7 @@ void AK_BaseCharacter::ActivateMainAbility()
 	if (MainAbility->CanActivateAbility())
 	{
 		MainAbility->ActivateAbility();
+		
 	}
 
 	GetWorldTimerManager().SetTimer(TimerHandle_EffectsTick, this, &AK_BaseCharacter::EffectsTick, CONST_CHARACTER_EFFECTS_TICK_TIME, true);
@@ -145,6 +146,8 @@ float AK_BaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 		{
 			// Deal damage
 			Health.SetData(FMath::Max<float>(Health.GetData() - DamageAmount, 0));
+
+			UE_LOG(LogK_BaseCharacter, Warning, TEXT("Damage is taken by %s"), *GetName());
 		}
 	}	
 	

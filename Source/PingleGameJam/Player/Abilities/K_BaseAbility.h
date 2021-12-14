@@ -21,6 +21,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* AbilityMontage;
 
+	UPROPERTY(VisibleAnywhere)
+	FName MeleeSocketname = "MeleeAttackSocket";
+
 protected:
 	FTimerHandle CooldownTimer;
 	

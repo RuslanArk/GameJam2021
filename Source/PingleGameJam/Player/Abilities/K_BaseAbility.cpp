@@ -14,7 +14,7 @@ UK_BaseAbility::UK_BaseAbility()
 	AbilityCollision = CreateDefaultSubobject<USphereComponent>(TEXT("AbilityCollisionComp"));
 	AbilityCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	AbilityCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
-	AbilityCollision->InitSphereRadius(50.0f);
+	AbilityCollision->InitSphereRadius(70.0f);
 }
 
 void UK_BaseAbility::Init(AK_BaseCharacter* Owner)
@@ -22,6 +22,7 @@ void UK_BaseAbility::Init(AK_BaseCharacter* Owner)
 	MyOwner = Owner;
 	UObject::GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &UK_BaseAbility::Tick_Cooldown, CooldownTickRate, true, 0.1f);
 
+	AbilityCollision->AttachToComponent(MyOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, MeleeSocketname);
 	InitAnimations();
 }
 
