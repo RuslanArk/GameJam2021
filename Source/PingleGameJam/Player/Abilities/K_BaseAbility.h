@@ -15,14 +15,10 @@ class UK_BaseAbility : public UObject
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	USphereComponent* AbilityCollision;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* AbilityMontage;
 
-	UPROPERTY(VisibleAnywhere)
-	FName MeleeSocketname = "MeleeAttackSocket";
 
 protected:
 	FTimerHandle CooldownTimer;
@@ -74,15 +70,15 @@ public:
 	float GetDamageAmount() { return DamageAmount; }
 
 	void InitAnimations();
+	void PlayMontage();
 
 protected:
 	void ActivateCooldown();
 	void ZeroedCooldown();
 
 	void Tick_Cooldown();
-
-	void PlayMontage(UAnimMontage* MontageToPlay);
-	void OnAbilityActivated();
-	void OnAbilityDeactivated();
+	
+	virtual void OnAbilityActivated();
+	virtual void OnAbilityDeactivated();
 	
 };

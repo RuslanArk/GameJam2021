@@ -8,21 +8,18 @@
 #include "PingleGameJam/Player/Abilities/AnimNotifies/K_ActivateAbilityAnimNotify.h"
 #include "PingleGameJam/Player/Abilities/AnimNotifies/K_EndAbilityAnimNotify.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogK_BaseAbility, All, All);
 
 UK_BaseAbility::UK_BaseAbility()
 {
-	AbilityCollision = CreateDefaultSubobject<USphereComponent>(TEXT("AbilityCollisionComp"));
-	AbilityCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	AbilityCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
-	AbilityCollision->InitSphereRadius(70.0f);
+	
 }
 
 void UK_BaseAbility::Init(AK_BaseCharacter* Owner)
 {
 	MyOwner = Owner;
 	UObject::GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &UK_BaseAbility::Tick_Cooldown, CooldownTickRate, true, 0.1f);
-
-	AbilityCollision->AttachToComponent(MyOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, MeleeSocketname);
+	
 	InitAnimations();
 }
 
@@ -36,10 +33,11 @@ void UK_BaseAbility::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 bool UK_BaseAbility::ActivateAbility()
 {
+	PlayMontage();
+	
 	if (!IsActive)
 	{
-		IsActive = true;
-		PlayMontage(AbilityMontage);
+		IsActive = true;		
 		return true;
 	}
 	
@@ -95,10 +93,10 @@ void UK_BaseAbility::Tick_Cooldown()
 	}
 }
 
-void UK_BaseAbility::PlayMontage(UAnimMontage* MontageToPlay)
+void UK_BaseAbility::PlayMontage()
 {
 	if (!MyOwner) return;
-	MyOwner->PlayAnimMontage(MontageToPlay);	
+	MyOwner->PlayAnimMontage(AbilityMontage);	
 }
 
 void UK_BaseAbility::InitAnimations()
@@ -112,12 +110,14 @@ void UK_BaseAbility::InitAnimations()
 		if (AbilityActivatedNotify)
 		{
 			AbilityActivatedNotify->OnNotified.AddUObject(this, &UK_BaseAbility::OnAbilityActivated);
+			UE_LOG(LogK_BaseAbility, Warning, TEXT("Start Ability bound"));
 			continue;
 		}
 
 		auto AbilityDeactivatedNotify = Cast<UK_EndAbilityAnimNotify>(NotifyEvent.Notify);
 		if (AbilityDeactivatedNotify)
 		{
+			UE_LOG(LogK_BaseAbility, Warning, TEXT("End Ability bound"));
 			AbilityDeactivatedNotify->OnNotified.AddUObject(this, &UK_BaseAbility::OnAbilityDeactivated);
 		}
 	}
@@ -125,14 +125,10 @@ void UK_BaseAbility::InitAnimations()
 
 void UK_BaseAbility::OnAbilityActivated()
 {
-	MyOwner->GetMovementComponent()->StopMovementImmediately();	
-	AbilityCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	AbilityCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);	
+	//MyOwner->GetMovementComponent()->StopMovementImmediately();
 }
 
 void UK_BaseAbility::OnAbilityDeactivated()
 {
-	//MyOwner->GetMovementComponent()->Activate(true);
-	AbilityCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	AbilityCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
+	
 }

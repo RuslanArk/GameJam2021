@@ -2,12 +2,17 @@
 #include "K_BaseClawAttackAbility.h"
 
 #include "Components/SphereComponent.h"
+#include "GameFramework/PawnMovementComponent.h"
 #include "PingleGameJam/Player/K_BaseCharacter.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogK_MeleeAbility, All, All);
 
 UK_BaseClawAttackAbility::UK_BaseClawAttackAbility()
 {
-	
+	AbilityCollision = CreateDefaultSubobject<USphereComponent>(TEXT("AbilityCollisionComp"));
+	AbilityCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	AbilityCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
+	AbilityCollision->InitSphereRadius(70.0f);
 }
 
 bool UK_BaseClawAttackAbility::ActivateAbility()
@@ -30,8 +35,11 @@ bool UK_BaseClawAttackAbility::CanActivateAbility()
 	return CurrentCooldown <= 0;
 }
 
-void UK_BaseClawAttackAbility::Init()
+void UK_BaseClawAttackAbility::Init(AK_BaseCharacter* Owner)
 {
+	Super::Init(Owner);
+	
+	AbilityCollision->AttachToComponent(MyOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, MeleeSocketname);
 	AbilityCollision->OnComponentBeginOverlap.AddDynamic(this, &UK_BaseClawAttackAbility::OnClawBeginOverlap);
 }
 
@@ -43,7 +51,24 @@ void UK_BaseClawAttackAbility::OnClawBeginOverlap(UPrimitiveComponent* Overlappe
 		AK_BaseCharacter* OverlappedActor = Cast<AK_BaseCharacter>(OtherActor);
 		if (OverlappedActor)
 		{
+			UE_LOG(LogK_MeleeAbility, Warning, TEXT("Melee ability might cause damage"));
 			OverlappedActor->TakeDamage(GetDamageAmount(), {}, MyOwner->GetController(), MyOwner);
 		}
 	}
 }
+
+
+void UK_BaseClawAttackAbility::OnAbilityActivated()
+{
+	MyOwner->GetMovementComponent()->StopMovementImmediately();	
+	AbilityCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	AbilityCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);	
+}
+
+void UK_BaseClawAttackAbility::OnAbilityDeactivated()
+{
+	//MyOwner->GetMovementComponent()->Activate(true);
+	AbilityCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	AbilityCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
+}
+

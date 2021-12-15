@@ -13,6 +13,7 @@
 #include "Net/UnrealNetwork.h"
 
 #include "PingleGameJam/Player/Abilities/K_BaseAbility.h"
+#include "PingleGameJam/Player/Abilities/Wolf/ClawAttack/K_BaseClawAttackAbility.h"
 
 
 DEFINE_LOG_CATEGORY_STATIC(LogK_BaseCharacter, All, All);
@@ -52,9 +53,9 @@ AK_BaseCharacter::AK_BaseCharacter()
 	
 	if (MainAbilityClass)
 	{
-		MainAbility = NewObject<UK_BaseAbility>(MainAbilityClass.Get());
-		if (MainAbility) { MainAbility->Init(this); }
-		MainAbility->InitAnimations();
+		MeleeAbility = NewObject<UK_BaseClawAttackAbility>(MainAbilityClass.Get());
+		if (MeleeAbility) { MeleeAbility->Init(this); }
+		MeleeAbility->InitAnimations();
 	}
 
 	if (Ability1Class)
@@ -90,7 +91,7 @@ void AK_BaseCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 	
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAction("ActivateMeleeAbility", IE_Pressed, this, &AK_BaseCharacter::ActivateMainAbility);	
+	PlayerInputComponent->BindAction("MeleeAbility", IE_Pressed, this, &AK_BaseCharacter::ActivateMainAbility);	
 	
 	PlayerInputComponent->BindAxis("MoveTop", this, &AK_BaseCharacter::MoveTop);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AK_BaseCharacter::MoveRight);
@@ -108,21 +109,21 @@ void AK_BaseCharacter::BeginPlay()
 	EventOnCharacterDied.AddUObject(this, &AK_BaseCharacter::OnCharacterDied);
 	Health.OnParameterChanged.AddDynamic(this, &AK_BaseCharacter::OnHealthChanged);
 
-	if (MainAbility)
+	if (MainAbilityClass)
 	{
-		MainAbility->AbilityCollision->OnComponentBeginOverlap.AddDynamic(this, &AK_BaseCharacter::OnMeleeAbilitySphereBeginOverlap);
-	}
+		MeleeAbility = NewObject<UK_BaseClawAttackAbility>(this, MainAbilityClass);
+		if (MeleeAbility)
+		{
+			MeleeAbility->Init(this);
+		}
+	}	
 }
 
 void AK_BaseCharacter::ActivateMainAbility()
 {
-	if (!MainAbility) return;
+	if (!MeleeAbility) return;
 
-	if (MainAbility->CanActivateAbility())
-	{
-		MainAbility->ActivateAbility();
-		
-	}
+	MeleeAbility->PlayMontage();
 
 	GetWorldTimerManager().SetTimer(TimerHandle_EffectsTick, this, &AK_BaseCharacter::EffectsTick, CONST_CHARACTER_EFFECTS_TICK_TIME, true);
 }
@@ -147,7 +148,7 @@ float AK_BaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 			// Deal damage
 			Health.SetData(FMath::Max<float>(Health.GetData() - DamageAmount, 0));
 
-			UE_LOG(LogK_BaseCharacter, Warning, TEXT("Damage is taken by %s"), *GetName());
+			UE_LOG(LogK_BaseCharacter, Warning, TEXT("Damage is taken by %s"), *DamageCauser->GetName());
 		}
 	}	
 	
@@ -170,7 +171,7 @@ bool AK_BaseCharacter::CanActivateAbility(UK_BaseAbility* Ability)
 UK_BaseAbility* AK_BaseCharacter::GetAbilityByIndex(const int32 AbilityIndex) const
 {
 	// Shit code, but do not care about it XD
-	if      (AbilityIndex == 0) { return MainAbility; }
+	if      (AbilityIndex == 0) { return MeleeAbility; }
 	else if (AbilityIndex == 1) { return Ability1; }
 	else if (AbilityIndex == 2) { return Ability2; }
 	else if (AbilityIndex == 3) { return Ability3; }
@@ -317,16 +318,3 @@ void AK_BaseCharacter::Server_ActivateAbility_Implementation(int32 AbilityIndex,
 	}
 }
 
-void AK_BaseCharacter::OnMeleeAbilitySphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (OtherActor)
-	{
-		AK_BaseCharacter* OverlappedActor = Cast<AK_BaseCharacter>(OtherActor);
-		if (OverlappedActor)
-		{
-			OverlappedActor->TakeDamage(MainAbility->GetDamageAmount(), {}, GetController(), this);
-			UE_LOG(LogK_BaseCharacter, Warning, TEXT("%s took: %d damage"), *OverlappedActor->GetName(), MainAbility->GetDamageAmount());
-		}
-	}
-}

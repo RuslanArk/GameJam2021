@@ -7,6 +7,7 @@
 #include "K_BaseCharacter.generated.h"
 
 class UK_BaseAbility;
+class UK_BaseClawAttackAbility;
 
 DECLARE_EVENT(AK_BaseCharacter, FK_EventOnCharacterDied)
 
@@ -28,7 +29,7 @@ public:
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Abilities")
-	UK_BaseAbility* MainAbility = nullptr;
+	UK_BaseClawAttackAbility* MeleeAbility = nullptr;
 	UPROPERTY(BlueprintReadOnly, Category = "Abilities")
 	UK_BaseAbility* Ability1 = nullptr;
 	UPROPERTY(BlueprintReadOnly, Category = "Abilities")
@@ -37,7 +38,7 @@ protected:
 	UK_BaseAbility* Ability3 = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "CharacterSetup")
-	TSubclassOf<UK_BaseAbility> MainAbilityClass;
+	TSubclassOf<UK_BaseClawAttackAbility> MainAbilityClass;
 	UPROPERTY(EditDefaultsOnly, Category = "CharacterSetup")
 	TSubclassOf<UK_BaseAbility> Ability1Class;
 	UPROPERTY(EditDefaultsOnly, Category = "CharacterSetup")
@@ -127,11 +128,7 @@ protected:
 	void OnRep_BodyRotation(float& OldParameter);
 
 private:
-	void RespawnPlayer();	
-	
-	UFUNCTION()
-	void OnMeleeAbilitySphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
-	
+	void RespawnPlayer();		
 
 private:
 	void UpdateVisibilityOfWolf();
