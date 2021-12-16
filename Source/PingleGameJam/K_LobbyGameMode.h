@@ -57,6 +57,8 @@ private:
 
 	void SpawnActorForNewcomer(APlayerController* NewPlayer);
 	FTransform FindSpawnSpot();
+
+	void RespawnPlayer(APlayerController* PlayerToRespawn);
 	
 };
 

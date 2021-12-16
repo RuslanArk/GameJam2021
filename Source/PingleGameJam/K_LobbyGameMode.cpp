@@ -7,7 +7,9 @@
 #include "GameFramework/PlayerStart.h"
 
 #include "GJGameInstance.h"
+#include "Characters/Werewolf/K_WerewolfCharacter.h"
 #include "Player/K_BaseCharacter.h"
+#include "Player/K_BasePlayerState.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogLobbyGM, All, All);
 
@@ -93,6 +95,16 @@ void AK_LobbyGameMode::SpawnActorForNewcomer(APlayerController* NewPlayer)
 			NewPlayer->UnPossess();
 			NewPlayer->Possess(NewCharacter);
 			NewCharacter->FinishSpawning(SpawnSpot);
+			AK_BasePlayerState* PlayerState = NewPlayer->GetPlayerState<AK_BasePlayerState>();
+			if (PlayerState)
+			{
+				PlayerState->SetCharacter(NewCharacter);
+				if (NewPlayer->GetPawn()->IsA(AK_WerewolfCharacter::StaticClass()))
+				{
+					PlayerState->IsWolf = true;
+				}
+			}
+			
 		}
 	}
 }
@@ -125,4 +137,9 @@ FTransform AK_LobbyGameMode::FindSpawnSpot()
 		}
 	}
 	return FindSpawnSpot();
+}
+
+void AK_LobbyGameMode::RespawnPlayer(APlayerController* PlayerToRespawn)
+{
+	// ..
 }

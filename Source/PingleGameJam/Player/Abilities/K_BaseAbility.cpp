@@ -28,16 +28,14 @@ void UK_BaseAbility::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UK_BaseAbility, CurrentCooldown);
-	DOREPLIFETIME(UK_BaseAbility, IsActive);
+	DOREPLIFETIME(UK_BaseAbility, IsActivated);
 }
 
 bool UK_BaseAbility::ActivateAbility()
-{
-	PlayMontage();
-	
-	if (!IsActive)
+{	
+	if (!IsActivated)
 	{
-		IsActive = true;		
+		IsActivated = true;		
 		return true;
 	}
 	
@@ -46,9 +44,9 @@ bool UK_BaseAbility::ActivateAbility()
 
 bool UK_BaseAbility::StopAbility()
 {
-	if (IsActive)
+	if (IsActivated)
 	{
-		IsActive = false;
+		IsActivated = false;
 		return true;
 	}
 	
@@ -57,12 +55,12 @@ bool UK_BaseAbility::StopAbility()
 
 bool UK_BaseAbility::CanActivateAbility()
 {
-	return MyOwner && CurrentCooldown <= 0 && !IsActive;
+	return MyOwner && CurrentCooldown <= 0 && !IsActivated;
 }
 
 void UK_BaseAbility::RestartCooldownIfIsActive()
 {
-	if (IsActive)
+	if (IsActivated)
 	{
 		ZeroedCooldown();
 		ActivateCooldown();
@@ -96,7 +94,12 @@ void UK_BaseAbility::Tick_Cooldown()
 void UK_BaseAbility::PlayMontage()
 {
 	if (!MyOwner) return;
-	MyOwner->PlayAnimMontage(AbilityMontage);	
+	UAnimInstance* AnimInstance = MyOwner->GetMesh()->GetAnimInstance();
+	if (AnimInstance && AbilityMontage)
+	{
+		AnimInstance->Montage_Play(AbilityMontage, 1.0f);
+	}
+	
 }
 
 void UK_BaseAbility::InitAnimations()

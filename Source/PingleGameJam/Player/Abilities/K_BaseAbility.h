@@ -10,7 +10,7 @@ class USphereComponent;
 class AK_BaseCharacter;
 
 UCLASS(Blueprintable)
-class UK_BaseAbility : public UObject
+class UK_BaseAbility : public USceneComponent
 {
 	GENERATED_BODY()
 
@@ -18,7 +18,6 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* AbilityMontage;
-
 
 protected:
 	FTimerHandle CooldownTimer;
@@ -29,7 +28,7 @@ protected:
 	UPROPERTY(Replicated)
 	float CurrentCooldown = 0;
 	UPROPERTY(Replicated)
-	bool IsActive = false;
+	bool IsActivated = false;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Ability_Setup")
 	float MaxCooldown = 5;
@@ -57,7 +56,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ability_Data")
 	float GetCurrentCooldown() const { return CurrentCooldown; }
 	UFUNCTION(BlueprintCallable, Category = "Ability_Data")
-	float GetIsActive() const { return IsActive; }
+	float GetIsActive() const { return IsActivated; }
 	
 	UFUNCTION(BlueprintCallable, Category = "Ability_Data")
 	float GetMaxCooldown() const { return MaxCooldown; }

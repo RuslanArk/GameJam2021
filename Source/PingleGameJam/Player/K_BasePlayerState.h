@@ -11,6 +11,10 @@ class AK_BasePlayerState : public APlayerState
 {
 	GENERATED_BODY()
 
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool IsWolf = false;
+
 protected:
 	UPROPERTY(Replicated, ReplicatedUsing = OnRep_LinkOnCharacter)
 	AK_BaseCharacter* LinkOnCharacter = nullptr;
