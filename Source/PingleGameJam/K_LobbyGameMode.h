@@ -6,6 +6,8 @@
 #include "PingleGameJamGameModeBase.h"
 #include "K_LobbyGameMode.generated.h"
 
+class APlayerStart;
+
 class AK_BaseCharacter;
 
 USTRUCT(BlueprintType)
@@ -14,8 +16,8 @@ struct FPlayersRoles
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(EditDefaultsOnly)
-	TArray<TSubclassOf<APawn>> PlayerClasses;	
-	TMap<int32, bool> RoleIsTaken;	
+	TArray<TSubclassOf<AK_BaseCharacter>> PlayerClasses;	
+	TMap<int32, bool> RoleIsTaken;
 };
 
 UCLASS()
@@ -26,6 +28,18 @@ class PINGLEGAMEJAM_API AK_LobbyGameMode : public APingleGameJamGameModeBase
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Players Params")
 	FPlayersRoles PlayersRoles;
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerStart")
+	const TSubclassOf<APlayerStart> PlayerStart;
+
+private:
+	uint32 NumberOfPlayers = 0;
+	bool CycleIsDone;
+
+	TMap<int32, bool> SpawnIsTaken;
+	TArray<FTransform> SpawnSpots;	
+
+	FTimerHandle ServerTravelTimer;
+	FTimerHandle SpawnTimerHandle;
 
 public:
 	AK_LobbyGameMode();
@@ -39,13 +53,12 @@ protected:
 	void StartGame();
 
 private:
-	uint32 NumberOfPlayers = 0;
+	TSubclassOf<AK_BaseCharacter> GiveRandomRole();
 
-	FTimerHandle ServerTravelTimer;
+	void SpawnActorForNewcomer(APlayerController* NewPlayer);
+	FTransform FindSpawnSpot();
 
-	TSubclassOf<APawn> GiveRandomRole();
-
-	bool CycleIsDone = false;
+	void RespawnPlayer(APlayerController* PlayerToRespawn);
 	
 };
 

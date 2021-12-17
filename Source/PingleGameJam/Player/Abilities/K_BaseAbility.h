@@ -3,15 +3,21 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "PingleGameJam/Player/K_BaseCharacter.h"
-
 #include "K_BaseAbility.generated.h"
 
+class USphereComponent;
+
+class AK_BaseCharacter;
 
 UCLASS(Blueprintable)
-class UK_BaseAbility : public UObject
+class UK_BaseAbility : public USceneComponent
 {
 	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* AbilityMontage;
 
 protected:
 	FTimerHandle CooldownTimer;
@@ -22,12 +28,14 @@ protected:
 	UPROPERTY(Replicated)
 	float CurrentCooldown = 0;
 	UPROPERTY(Replicated)
-	bool IsActive = false;
+	bool IsActivated = false;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Ability_Setup")
 	float MaxCooldown = 5;
 	UPROPERTY(EditDefaultsOnly, Category = "Ability_Setup")
 	float CooldownTickRate = 0.1;
+	UPROPERTY(EditDefaultsOnly, Category = "Ability_Setup")
+	float DamageAmount = 10.0f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Ability_Setup")
 	FString AbilityName = "AbilityName";
@@ -43,12 +51,12 @@ public:
 	virtual bool StopAbility();
 	virtual bool CanActivateAbility();
 
-	void RestartCooldownIfItIsActive(); // For Wolf ability (Intimidation)
+	void RestartCooldownIfIsActive(); // For Wolf ability (Intimidation)
 
 	UFUNCTION(BlueprintCallable, Category = "Ability_Data")
 	float GetCurrentCooldown() const { return CurrentCooldown; }
 	UFUNCTION(BlueprintCallable, Category = "Ability_Data")
-	float GetIsActive() const { return IsActive; }
+	float GetIsActive() const { return IsActivated; }
 	
 	UFUNCTION(BlueprintCallable, Category = "Ability_Data")
 	float GetMaxCooldown() const { return MaxCooldown; }
@@ -56,10 +64,20 @@ public:
 	FString GetAbilityName() const { return AbilityName; }
 	UFUNCTION(BlueprintCallable, Category = "Ability_Data")
 	UTexture2D* GetTextureIcon() const { return TextureIcon; }
+	
+	UFUNCTION(BlueprintCallable, Category = "Attack")
+	float GetDamageAmount() { return DamageAmount; }
+
+	void InitAnimations();
+	void PlayMontage();
 
 protected:
 	void ActivateCooldown();
 	void ZeroedCooldown();
 
 	void Tick_Cooldown();
+	
+	virtual void OnAbilityActivated();
+	virtual void OnAbilityDeactivated();
+	
 };

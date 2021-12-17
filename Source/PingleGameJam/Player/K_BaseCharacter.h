@@ -2,13 +2,17 @@
 
 #include "CoreMinimal.h"
 #include "K_BaseCharacterAnimInstance.h"
-#include "Abilities/K_BaseAbility.h"
 #include "GameFramework/Character.h"
 #include "PingleGameJam/K_Support.h"
 #include "K_BaseCharacter.generated.h"
 
+class UK_BaseAbility;
+class UK_BaseClawAttackAbility;
 
 DECLARE_EVENT(AK_BaseCharacter, FK_EventOnCharacterDied)
+
+
+#define CONST_CHARACTER_EFFECTS_TICK_TIME 0.1f
 
 
 UCLASS(Blueprintable)
@@ -19,9 +23,13 @@ class AK_BaseCharacter : public ACharacter
 public:
 	FK_EventOnCharacterDied EventOnCharacterDied;
 
+	// All Effects (The shortest way - is a timer, when 0 - is disable)
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Effects")
+	float IntimidationEffect = 0; // UK_BaseIntimidationAbility - can not see teammates, lock abilities (reset abilities cooldown do once form ability).
+
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Abilities")
-	UK_BaseAbility* MainAbility = nullptr;
+	UK_BaseClawAttackAbility* MeleeAbility = nullptr;
 	UPROPERTY(BlueprintReadOnly, Category = "Abilities")
 	UK_BaseAbility* Ability1 = nullptr;
 	UPROPERTY(BlueprintReadOnly, Category = "Abilities")
@@ -30,7 +38,7 @@ protected:
 	UK_BaseAbility* Ability3 = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "CharacterSetup")
-	TSubclassOf<UK_BaseAbility> MainAbilityClass;
+	TSubclassOf<UK_BaseClawAttackAbility> MainAbilityClass;
 	UPROPERTY(EditDefaultsOnly, Category = "CharacterSetup")
 	TSubclassOf<UK_BaseAbility> Ability1Class;
 	UPROPERTY(EditDefaultsOnly, Category = "CharacterSetup")
@@ -49,6 +57,9 @@ protected:
 	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadWrite, Category = "CharacterData", ReplicatedUsing = OnRep_BodyRotation)
 	float BodyRotation = 1.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float RespawnRate = 5.0f;
+
 private:
     UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
 	USkeletalMeshComponent* MainMesh;
@@ -57,6 +68,10 @@ private:
 	class UCameraComponent* TopDownCameraComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
+
+	FTimerHandle TimerHandle_EffectsTick;
+
+	FTimerHandle RespawnTimer;
 
 public:
 	AK_BaseCharacter();
@@ -67,6 +82,8 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+	void EffectsTick();
+	
 	UFUNCTION(BlueprintCallable, Category = "CharacterMethods")
 	bool CanActivateAbility(UK_BaseAbility* Ability);
 	UFUNCTION(BlueprintCallable, Category = "CharacterMethods")
@@ -74,8 +91,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CharacterMethods")
 	float GetHealth() const { return Health.GetData(); }
 
+	void SetLocalVisibility(bool IsVisibility);
+	
 	UFUNCTION(Server, Reliable)
 	void Server_ActivateAbility(int32 AbilityIndex, FVector Location, AK_BaseCharacter* Target);
+
+	void ActivateMainAbility();
+	
 
 protected:
 	void MoveTop(float Value);
@@ -91,10 +113,24 @@ protected:
 	UK_BaseCharacterAnimInstance* GetAnimInstance() const { return Cast<UK_BaseCharacterAnimInstance>(GetMesh()->GetAnimInstance()); }
 	class UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent; }
 	class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+
+	UFUNCTION()
+	void ActionActivateAbility1();
+	UFUNCTION()
+	void ActionActivateAbility2();
+	UFUNCTION()
+	void ActionActivateAbility3();
 	
 	UFUNCTION()
 	virtual void OnHealthChanged(float OldHealth, float NewHealth);
 	
 	UFUNCTION()
 	void OnRep_BodyRotation(float& OldParameter);
+
+private:
+	void RespawnPlayer();		
+
+private:
+	void UpdateVisibilityOfWolf();
+	void UpdateVisibilityOfTeammates(); // Using for UK_BaseIntimidationAbility
 };

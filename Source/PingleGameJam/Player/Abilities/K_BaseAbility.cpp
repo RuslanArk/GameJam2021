@@ -1,7 +1,14 @@
 
 #include "K_BaseAbility.h"
 #include "Net/UnrealNetwork.h"
+#include "Components/SphereComponent.h"
+#include "GameFramework/PawnMovementComponent.h"
 
+#include "PingleGameJam/Player/K_BaseCharacter.h"
+#include "PingleGameJam/Player/Abilities/AnimNotifies/K_ActivateAbilityAnimNotify.h"
+#include "PingleGameJam/Player/Abilities/AnimNotifies/K_EndAbilityAnimNotify.h"
+
+DEFINE_LOG_CATEGORY_STATIC(LogK_BaseAbility, All, All);
 
 UK_BaseAbility::UK_BaseAbility()
 {
@@ -12,6 +19,8 @@ void UK_BaseAbility::Init(AK_BaseCharacter* Owner)
 {
 	MyOwner = Owner;
 	UObject::GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &UK_BaseAbility::Tick_Cooldown, CooldownTickRate, true, 0.1f);
+	
+	InitAnimations();
 }
 
 void UK_BaseAbility::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -19,14 +28,14 @@ void UK_BaseAbility::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UK_BaseAbility, CurrentCooldown);
-	DOREPLIFETIME(UK_BaseAbility, IsActive);
+	DOREPLIFETIME(UK_BaseAbility, IsActivated);
 }
 
 bool UK_BaseAbility::ActivateAbility()
-{
-	if (!IsActive)
+{	
+	if (!IsActivated)
 	{
-		IsActive = true;
+		IsActivated = true;		
 		return true;
 	}
 	
@@ -35,9 +44,9 @@ bool UK_BaseAbility::ActivateAbility()
 
 bool UK_BaseAbility::StopAbility()
 {
-	if (IsActive)
+	if (IsActivated)
 	{
-		IsActive = false;
+		IsActivated = false;
 		return true;
 	}
 	
@@ -46,13 +55,16 @@ bool UK_BaseAbility::StopAbility()
 
 bool UK_BaseAbility::CanActivateAbility()
 {
-	return MyOwner && CurrentCooldown <= 0 && !IsActive;
+	return MyOwner && CurrentCooldown <= 0 && !IsActivated;
 }
 
-void UK_BaseAbility::RestartCooldownIfItIsActive()
+void UK_BaseAbility::RestartCooldownIfIsActive()
 {
-	ZeroedCooldown();
-	ActivateCooldown();
+	if (IsActivated)
+	{
+		ZeroedCooldown();
+		ActivateCooldown();
+	}
 }
 
 void UK_BaseAbility::ActivateCooldown()
@@ -77,4 +89,49 @@ void UK_BaseAbility::Tick_Cooldown()
 	{
 		GetWorld()->GetTimerManager().PauseTimer(CooldownTimer);
 	}
+}
+
+void UK_BaseAbility::PlayMontage()
+{
+	if (!MyOwner) return;
+	UAnimInstance* AnimInstance = MyOwner->GetMesh()->GetAnimInstance();
+	if (AnimInstance && AbilityMontage)
+	{
+		AnimInstance->Montage_Play(AbilityMontage, 1.0f);
+	}
+	
+}
+
+void UK_BaseAbility::InitAnimations()
+{
+	if (!AbilityMontage) return;
+	const TArray<FAnimNotifyEvent> NotifyEvents = AbilityMontage->Notifies;
+
+	for (FAnimNotifyEvent NotifyEvent : NotifyEvents)
+	{
+		auto AbilityActivatedNotify = Cast<UK_ActivateAbilityAnimNotify>(NotifyEvent.Notify);
+		if (AbilityActivatedNotify)
+		{
+			AbilityActivatedNotify->OnNotified.AddUObject(this, &UK_BaseAbility::OnAbilityActivated);
+			UE_LOG(LogK_BaseAbility, Warning, TEXT("Start Ability bound"));
+			continue;
+		}
+
+		auto AbilityDeactivatedNotify = Cast<UK_EndAbilityAnimNotify>(NotifyEvent.Notify);
+		if (AbilityDeactivatedNotify)
+		{
+			UE_LOG(LogK_BaseAbility, Warning, TEXT("End Ability bound"));
+			AbilityDeactivatedNotify->OnNotified.AddUObject(this, &UK_BaseAbility::OnAbilityDeactivated);
+		}
+	}
+}
+
+void UK_BaseAbility::OnAbilityActivated()
+{
+	//MyOwner->GetMovementComponent()->StopMovementImmediately();
+}
+
+void UK_BaseAbility::OnAbilityDeactivated()
+{
+	
 }
