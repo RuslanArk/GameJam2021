@@ -28,8 +28,6 @@ UK_BaseCharacterAnimInstance::UK_BaseCharacterAnimInstance()
 }
 
 void UK_BaseCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds) {
-	FullBodyBlend = GetCurveValue("FullBodyBlend");
-
 	if (const auto Pawn = TryGetPawnOwner())
 	{
 		// Move
@@ -56,11 +54,15 @@ void UK_BaseCharacterAnimInstance::StartAttackAnimation()
 {
 	if (AttackMontage && !Montage_IsPlaying(AttackMontage))
 	{
-		Montage_Play(AttackMontage);
-	}
+		Montage_Play(AttackMontage, 1.0, EMontagePlayReturnType::MontageLength, 0.0f);
+		Client_StartAttackAnimation();
+	}	
 }
 
-bool UK_BaseCharacterAnimInstance::IsAttackAnimationPlaying() const
+void UK_BaseCharacterAnimInstance::Client_StartAttackAnimation_Implementation()
 {
-	return Montage_IsPlaying(AttackMontage);
+	if (AttackMontage)
+	{
+		Montage_Play(AttackMontage, 1.0, EMontagePlayReturnType::MontageLength, 0.0f);
+	}
 }

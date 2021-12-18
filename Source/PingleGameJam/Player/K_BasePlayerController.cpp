@@ -1,15 +1,12 @@
 
 #include "K_BasePlayerController.h"
-#include "Runtime/Engine/Classes/Components/DecalComponent.h"
+#include "DrawDebugHelpers.h"
 #include "K_BaseCharacter.h"
 
 
 AK_BasePlayerController::AK_BasePlayerController()
 {
 	SetReplicates(true);
-	
-	//bShowMouseCursor = true;
-	//DefaultMouseCursor = EMouseCursor::Crosshairs;
 }
 
 void AK_BasePlayerController::SetupInputComponent()
@@ -34,7 +31,15 @@ void AK_BasePlayerController::BeginPlay()
 void AK_BasePlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
-
+	
+	// Trace to see what is under the mouse cursor
+	FHitResult Hit;
+	GetHitResultUnderCursor(ECC_Pawn, false, Hit);
+	if (Hit.bBlockingHit)
+	{
+		Server_UpdateCursorLocation(Hit.ImpactPoint);
+	}
+	
 }
 
 void AK_BasePlayerController::OnUseActionPressed()
@@ -45,8 +50,11 @@ void AK_BasePlayerController::OnUseActionPressed()
 
 	if (Hit.bBlockingHit)
 	{
-		// We hit something, move there
-		//SetAttack(Hit.ImpactPoint);
+		if (auto MyCharacter = Cast<AK_BaseCharacter>(GetPawn()))
+		{
+			MyCharacter->Server_ActivateAbility(0, Hit.ImpactPoint, nullptr);
+			DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 2, 16, FColor::Purple, true, 2.0f);
+		}
 	}
 }
 

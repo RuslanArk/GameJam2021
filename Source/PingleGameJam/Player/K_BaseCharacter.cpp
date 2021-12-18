@@ -26,7 +26,7 @@ AK_BaseCharacter::AK_BaseCharacter()
 
 	// Don't rotate character to camera direction
 	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = false;
+	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = false;
 
 	// Configure character movement
@@ -82,7 +82,6 @@ void AK_BaseCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AK_BaseCharacter, Health);
-	DOREPLIFETIME(AK_BaseCharacter, BodyRotation);
 }
 
 void AK_BaseCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -121,10 +120,6 @@ void AK_BaseCharacter::BeginPlay()
 
 void AK_BaseCharacter::ActivateMainAbility()
 {
-	if (!MeleeAbility) return;
-
-	MeleeAbility->PlayMontage();
-
 	GetWorldTimerManager().SetTimer(TimerHandle_EffectsTick, this, &AK_BaseCharacter::EffectsTick, CONST_CHARACTER_EFFECTS_TICK_TIME, true);
 }
 
@@ -132,7 +127,6 @@ void AK_BaseCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	UpdateVisibilityOfWolf();
 	UpdateVisibilityOfTeammates();
 }
 
@@ -188,7 +182,7 @@ void AK_BaseCharacter::MoveTop(float Value)
 {
 	if (Value != 0.0f)
 	{
-		AddMovementInput(FVector(1, 0, 0), Value * MovementSpeedModificator);
+		AddMovementInput(GetActorForwardVector(), Value * MovementSpeedModificator);
 	}
 }
 
@@ -196,7 +190,7 @@ void AK_BaseCharacter::MoveRight(float Value)
 {
 	if (Value != 0.0f)
 	{
-		AddMovementInput(FVector(0, 1, 0), Value * MovementSpeedModificator);
+		AddMovementInput(GetActorRightVector(), Value * MovementSpeedModificator);
 	}
 }
 
@@ -204,9 +198,7 @@ void AK_BaseCharacter::TurnRight(float Value)
 {
 	if (Value != 0.0f)
 	{
-		float NewBodyRotation = BodyRotation + Value * TurnRateModificator * GetWorld()->GetDeltaSeconds();
-		NewBodyRotation = NewBodyRotation > 360 ? NewBodyRotation - 360 : NewBodyRotation < 0 ? NewBodyRotation + 360 : NewBodyRotation;
-		SetNewBodyRotation(NewBodyRotation);
+		AddControllerYawInput(Value * TurnRateModificator);
 	}
 }
 
@@ -241,14 +233,6 @@ bool AK_BaseCharacter::CanActivateAbilityCheck(UK_BaseAbility* Ability)
 	return false;
 }
 
-void AK_BaseCharacter::SetNewBodyRotation(float& NewBodyRotation)
-{
-	BodyRotation = NewBodyRotation;
-	FRotator NewRotate = GetActorRotation();
-	NewRotate.Yaw = BodyRotation;
-	SetActorRotation(NewRotate);
-}
-
 void AK_BaseCharacter::ActionActivateAbility1()
 {
 	Server_ActivateAbility(1, FVector(), nullptr);
@@ -270,16 +254,6 @@ void AK_BaseCharacter::OnHealthChanged(float OldHealth, float NewHealth)
 	{
 		OnCharacterDied();
 	}
-}
-
-void AK_BaseCharacter::OnRep_BodyRotation(float& OldParameter)
-{
-	SetNewBodyRotation(BodyRotation);
-}
-
-void AK_BaseCharacter::UpdateVisibilityOfWolf()
-{
-	
 }
 
 void AK_BaseCharacter::UpdateVisibilityOfTeammates()

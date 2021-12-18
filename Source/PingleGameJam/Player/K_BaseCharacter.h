@@ -53,9 +53,6 @@ protected:
 
 	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadWrite, Category = "CharacterData")
 	FK_FloatParameter Health;
-	
-	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadWrite, Category = "CharacterData", ReplicatedUsing = OnRep_BodyRotation)
-	float BodyRotation = 1.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float RespawnRate = 5.0f;
@@ -107,8 +104,6 @@ protected:
 
 	virtual void OnCharacterDied();
 	virtual bool CanActivateAbilityCheck(UK_BaseAbility* Ability);
-
-	void SetNewBodyRotation(float& NewBodyRotation);
 	
 	UK_BaseCharacterAnimInstance* GetAnimInstance() const { return Cast<UK_BaseCharacterAnimInstance>(GetMesh()->GetAnimInstance()); }
 	class UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent; }
@@ -123,14 +118,9 @@ protected:
 	
 	UFUNCTION()
 	virtual void OnHealthChanged(float OldHealth, float NewHealth);
-	
-	UFUNCTION()
-	void OnRep_BodyRotation(float& OldParameter);
 
 private:
 	void RespawnPlayer();		
 
-private:
-	void UpdateVisibilityOfWolf();
 	void UpdateVisibilityOfTeammates(); // Using for UK_BaseIntimidationAbility
 };

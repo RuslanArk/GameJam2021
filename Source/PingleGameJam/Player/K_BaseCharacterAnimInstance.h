@@ -49,5 +49,6 @@ public:
 
 	void StartAttackAnimation();
 
-	bool IsAttackAnimationPlaying() const;
+	UFUNCTION(Client, Reliable)
+	void Client_StartAttackAnimation();
 };

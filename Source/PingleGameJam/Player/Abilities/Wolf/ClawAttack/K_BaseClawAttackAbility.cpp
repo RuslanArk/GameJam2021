@@ -17,29 +17,26 @@ UK_BaseClawAttackAbility::UK_BaseClawAttackAbility()
 
 bool UK_BaseClawAttackAbility::ActivateAbility()
 {
-	if (Super::ActivateAbility())
+	if (CanActivateAbility() && Super::ActivateAbility())
 	{
+		if (UK_BaseCharacterAnimInstance* AnimInstance = Cast<UK_BaseCharacterAnimInstance>(MyOwner->GetMesh()->GetAnimInstance()))
+		{		
+			AnimInstance->StartAttackAnimation();
+			UE_LOG(LogK_MeleeAbility, Warning, TEXT("Attack animation played"));
+		}
 		
+		StopAbility();
+		return true;
 	}
 	
 	return false;
-}
-
-bool UK_BaseClawAttackAbility::StopAbility()
-{
-	return false;
-}
-
-bool UK_BaseClawAttackAbility::CanActivateAbility()
-{
-	return CurrentCooldown <= 0;
 }
 
 void UK_BaseClawAttackAbility::Init(AK_BaseCharacter* Owner)
 {
 	Super::Init(Owner);
 	
-	AbilityCollision->AttachToComponent(MyOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, MeleeSocketname);
+	AbilityCollision->AttachToComponent(MyOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, MeleeSocketName);
 	AbilityCollision->OnComponentBeginOverlap.AddDynamic(this, &UK_BaseClawAttackAbility::OnClawBeginOverlap);
 }
 

@@ -35,6 +35,7 @@ bool UK_BaseAbility::ActivateAbility()
 {	
 	if (!IsActivated)
 	{
+		UE_LOG(LogK_BaseAbility, Warning, TEXT("Ability Activated"));
 		IsActivated = true;		
 		return true;
 	}
@@ -46,6 +47,7 @@ bool UK_BaseAbility::StopAbility()
 {
 	if (IsActivated)
 	{
+		UE_LOG(LogK_BaseAbility, Warning, TEXT("Ability Stoped"));
 		IsActivated = false;
 		return true;
 	}
@@ -91,44 +93,36 @@ void UK_BaseAbility::Tick_Cooldown()
 	}
 }
 
-void UK_BaseAbility::PlayMontage()
-{
-	if (!MyOwner) return;
-	UAnimInstance* AnimInstance = MyOwner->GetMesh()->GetAnimInstance();
-	if (AnimInstance && AbilityMontage)
-	{
-		AnimInstance->Montage_Play(AbilityMontage, 1.0f);
-	}
-	
-}
-
 void UK_BaseAbility::InitAnimations()
 {
-	if (!AbilityMontage) return;
-	const TArray<FAnimNotifyEvent> NotifyEvents = AbilityMontage->Notifies;
-
-	for (FAnimNotifyEvent NotifyEvent : NotifyEvents)
+	UK_BaseCharacterAnimInstance* AnimInstance = Cast<UK_BaseCharacterAnimInstance>(MyOwner->GetMesh()->GetAnimInstance());
+	if (AnimInstance && AnimInstance->AttackMontage)
 	{
-		auto AbilityActivatedNotify = Cast<UK_ActivateAbilityAnimNotify>(NotifyEvent.Notify);
-		if (AbilityActivatedNotify)
-		{
-			AbilityActivatedNotify->OnNotified.AddUObject(this, &UK_BaseAbility::OnAbilityActivated);
-			UE_LOG(LogK_BaseAbility, Warning, TEXT("Start Ability bound"));
-			continue;
-		}
+		const TArray<FAnimNotifyEvent> NotifyEvents = AnimInstance->AttackMontage->Notifies;
 
-		auto AbilityDeactivatedNotify = Cast<UK_EndAbilityAnimNotify>(NotifyEvent.Notify);
-		if (AbilityDeactivatedNotify)
+		for (const FAnimNotifyEvent NotifyEvent : NotifyEvents)
 		{
-			UE_LOG(LogK_BaseAbility, Warning, TEXT("End Ability bound"));
-			AbilityDeactivatedNotify->OnNotified.AddUObject(this, &UK_BaseAbility::OnAbilityDeactivated);
+			auto AbilityActivatedNotify = Cast<UK_ActivateAbilityAnimNotify>(NotifyEvent.Notify);
+			if (AbilityActivatedNotify)
+			{
+				AbilityActivatedNotify->OnNotified.AddUObject(this, &UK_BaseAbility::OnAbilityActivated);
+				UE_LOG(LogK_BaseAbility, Warning, TEXT("Start Ability bound"));
+				continue;
+			}
+
+			auto AbilityDeactivatedNotify = Cast<UK_EndAbilityAnimNotify>(NotifyEvent.Notify);
+			if (AbilityDeactivatedNotify)
+			{
+				AbilityDeactivatedNotify->OnNotified.AddUObject(this, &UK_BaseAbility::OnAbilityDeactivated);
+				UE_LOG(LogK_BaseAbility, Warning, TEXT("End Ability bound"));
+			}
 		}
 	}
 }
 
 void UK_BaseAbility::OnAbilityActivated()
 {
-	//MyOwner->GetMovementComponent()->StopMovementImmediately();
+	
 }
 
 void UK_BaseAbility::OnAbilityDeactivated()

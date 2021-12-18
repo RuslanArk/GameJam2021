@@ -14,11 +14,6 @@ class UK_BaseAbility : public USceneComponent
 {
 	GENERATED_BODY()
 
-public:
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* AbilityMontage;
-
 protected:
 	FTimerHandle CooldownTimer;
 	
@@ -69,7 +64,6 @@ public:
 	float GetDamageAmount() { return DamageAmount; }
 
 	void InitAnimations();
-	void PlayMontage();
 
 protected:
 	void ActivateCooldown();
