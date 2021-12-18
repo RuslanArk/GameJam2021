@@ -193,9 +193,7 @@ void AK_BaseCharacter::TurnRight(float Value)
 }
 
 void AK_BaseCharacter::OnCharacterDied()
-{
-	Destroy(); // temporary
-	
+{	
 	//TODO: play death animation
 	if (GetMovementComponent())
 	{
