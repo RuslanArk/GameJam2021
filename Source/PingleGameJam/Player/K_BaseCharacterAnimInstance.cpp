@@ -55,14 +55,5 @@ void UK_BaseCharacterAnimInstance::StartAttackAnimation()
 	if (AttackMontage && !Montage_IsPlaying(AttackMontage))
 	{
 		Montage_Play(AttackMontage, 1.0, EMontagePlayReturnType::MontageLength, 0.0f);
-		Client_StartAttackAnimation();
 	}	
-}
-
-void UK_BaseCharacterAnimInstance::Client_StartAttackAnimation_Implementation()
-{
-	if (AttackMontage)
-	{
-		Montage_Play(AttackMontage, 1.0, EMontagePlayReturnType::MontageLength, 0.0f);
-	}
 }

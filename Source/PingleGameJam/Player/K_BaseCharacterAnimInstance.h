@@ -48,7 +48,4 @@ public:
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 	void StartAttackAnimation();
-
-	UFUNCTION(Client, Reliable)
-	void Client_StartAttackAnimation();
 };

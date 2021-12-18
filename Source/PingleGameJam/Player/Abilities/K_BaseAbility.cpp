@@ -19,8 +19,11 @@ void UK_BaseAbility::Init(AK_BaseCharacter* Owner)
 {
 	MyOwner = Owner;
 	UObject::GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &UK_BaseAbility::Tick_Cooldown, CooldownTickRate, true, 0.1f);
-	
-	InitAnimations();
+
+	if (GetNetMode() != ENetMode::NM_Client)
+	{
+		InitAnimations();
+	}
 }
 
 void UK_BaseAbility::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

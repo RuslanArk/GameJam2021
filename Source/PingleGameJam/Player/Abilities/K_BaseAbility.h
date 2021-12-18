@@ -10,14 +10,14 @@ class USphereComponent;
 class AK_BaseCharacter;
 
 UCLASS(Blueprintable)
-class UK_BaseAbility : public USceneComponent
+class UK_BaseAbility : public UActorComponent
 {
 	GENERATED_BODY()
 
 protected:
 	FTimerHandle CooldownTimer;
 	
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	AK_BaseCharacter* MyOwner = nullptr;
 	
 	UPROPERTY(Replicated)

@@ -94,7 +94,9 @@ public:
 	void Server_ActivateAbility(int32 AbilityIndex, FVector Location, AK_BaseCharacter* Target);
 
 	void ActivateMainAbility();
-	
+		
+	UFUNCTION(NetMulticast, Reliable)
+	void Client_StartAttackAnimation();
 
 protected:
 	void MoveTop(float Value);

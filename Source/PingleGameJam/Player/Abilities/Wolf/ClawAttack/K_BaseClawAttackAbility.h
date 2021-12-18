@@ -13,6 +13,9 @@ class UK_BaseClawAttackAbility : public UK_BaseAbility
 	GENERATED_BODY()
 	
 public:
+	UPROPERTY()
+	FTimerHandle AttackTimer;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USphereComponent* AbilityCollision;
 	
@@ -23,12 +26,15 @@ public:
 	UK_BaseClawAttackAbility();
 	
 	virtual bool ActivateAbility() override;
-	virtual void Init(AK_BaseCharacter* Owner) override;	
+	virtual void Init(AK_BaseCharacter* Owner) override;
 
-private:
 	UFUNCTION()
 	void OnClawBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
-	
+
+	UFUNCTION()
+	void OverlapTick();
+
+private:
 	virtual void OnAbilityActivated() override;
 	virtual void OnAbilityDeactivated() override;
 };

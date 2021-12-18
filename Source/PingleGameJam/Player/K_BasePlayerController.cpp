@@ -53,7 +53,6 @@ void AK_BasePlayerController::OnUseActionPressed()
 		if (auto MyCharacter = Cast<AK_BaseCharacter>(GetPawn()))
 		{
 			MyCharacter->Server_ActivateAbility(0, Hit.ImpactPoint, nullptr);
-			DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 2, 16, FColor::Purple, true, 2.0f);
 		}
 	}
 }

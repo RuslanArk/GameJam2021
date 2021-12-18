@@ -49,32 +49,7 @@ AK_BaseCharacter::AK_BaseCharacter()
 
 	// Activate ticking in order to update the cursor every frame.
 	PrimaryActorTick.bCanEverTick = true;
-	PrimaryActorTick.bStartWithTickEnabled = true;
-	
-	if (MainAbilityClass)
-	{
-		MeleeAbility = NewObject<UK_BaseClawAttackAbility>(MainAbilityClass.Get());
-		if (MeleeAbility) { MeleeAbility->Init(this); }
-		MeleeAbility->InitAnimations();
-	}
-
-	if (Ability1Class)
-	{
-		Ability1 = NewObject<UK_BaseAbility>(Ability1Class.Get());
-		if (Ability1) { Ability1->Init(this); }
-	}
-
-	if (Ability2Class)
-	{
-		Ability2 = NewObject<UK_BaseAbility>(Ability2Class.Get());
-		if (Ability2) { Ability2->Init(this); }
-	}
-	
-	if (Ability3Class)
-	{
-		Ability3 = NewObject<UK_BaseAbility>(Ability3Class.Get());
-		if (Ability3) { Ability3->Init(this); }
-	}
+	PrimaryActorTick.bStartWithTickEnabled = true;	
 }
 
 void AK_BaseCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
@@ -111,11 +86,26 @@ void AK_BaseCharacter::BeginPlay()
 	if (MainAbilityClass)
 	{
 		MeleeAbility = NewObject<UK_BaseClawAttackAbility>(this, MainAbilityClass);
-		if (MeleeAbility)
-		{
-			MeleeAbility->Init(this);
-		}
-	}	
+		if (MeleeAbility) { MeleeAbility->Init(this); }
+	}
+
+	if (Ability1Class)
+	{
+		Ability1 = NewObject<UK_BaseAbility>(this, Ability1Class);
+		if (Ability1) { Ability1->Init(this); }
+	}
+
+	if (Ability2Class)
+	{
+		Ability2 = NewObject<UK_BaseAbility>(this, Ability2Class);
+		if (Ability2) { Ability2->Init(this); }
+	}
+	
+	if (Ability3Class)
+	{
+		Ability3 = NewObject<UK_BaseAbility>(this, Ability3Class);
+		if (Ability3) { Ability3->Init(this); }
+	}
 }
 
 void AK_BaseCharacter::ActivateMainAbility()
@@ -204,6 +194,8 @@ void AK_BaseCharacter::TurnRight(float Value)
 
 void AK_BaseCharacter::OnCharacterDied()
 {
+	Destroy(); // temporary
+	
 	//TODO: play death animation
 	if (GetMovementComponent())
 	{
@@ -292,3 +284,10 @@ void AK_BaseCharacter::Server_ActivateAbility_Implementation(int32 AbilityIndex,
 	}
 }
 
+void AK_BaseCharacter::Client_StartAttackAnimation_Implementation()
+{
+	if (UK_BaseCharacterAnimInstance* AnimInstance = Cast<UK_BaseCharacterAnimInstance>(GetMesh()->GetAnimInstance()))
+	{		
+		AnimInstance->StartAttackAnimation();
+	}
+}
