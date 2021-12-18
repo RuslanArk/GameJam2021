@@ -211,11 +211,6 @@ void AK_BaseCharacter::Server_OnCharacterDied_Implementation()
 	{
 		Health.SetData(HealthForOthers);
 	}
-
-void AK_BaseCharacter::OnCharacterDied()
-{	
-	//TODO: play death animation
-	EventOnCharacterDied.Broadcast();
 }
 
 void AK_BaseCharacter::RespawnPlayer_Implementation()
