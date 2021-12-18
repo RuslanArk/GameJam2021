@@ -8,6 +8,7 @@ void AK_BasePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AK_BasePlayerState, LinkOnCharacter);
+	DOREPLIFETIME(AK_BasePlayerState, IsWolf);
 }
 
 AK_BasePlayerState::AK_BasePlayerState()

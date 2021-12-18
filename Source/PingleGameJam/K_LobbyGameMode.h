@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "PingleGameJamGameModeBase.h"
+#include "Player/K_BasePlayerController.h"
 #include "K_LobbyGameMode.generated.h"
 
 class APlayerStart;
@@ -30,6 +31,8 @@ public:
 	FPlayersRoles PlayersRoles;
 	UPROPERTY(EditDefaultsOnly, Category = "PlayerStart")
 	const TSubclassOf<APlayerStart> PlayerStart;
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerStart")
+	const TSubclassOf<AK_BasePlayerController> ControllerClass;
 
 private:
 	uint32 NumberOfPlayers = 0;
@@ -40,6 +43,8 @@ private:
 
 	FTimerHandle ServerTravelTimer;
 	FTimerHandle SpawnTimerHandle;
+
+	TArray<AActor*> SpawnedControllers;
 
 public:
 	AK_LobbyGameMode();
@@ -58,7 +63,8 @@ private:
 	void SpawnActorForNewcomer(APlayerController* NewPlayer);
 	FTransform FindSpawnSpot();
 
-	void RespawnPlayer(APlayerController* PlayerToRespawn);
+	void RespawnPlayers();
+	void RespawnAllDeadPlayers();
 	
 };
 

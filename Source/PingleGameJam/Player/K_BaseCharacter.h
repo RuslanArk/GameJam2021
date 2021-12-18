@@ -6,6 +6,8 @@
 #include "PingleGameJam/K_Support.h"
 #include "K_BaseCharacter.generated.h"
 
+class APlayerStart;
+
 class UK_BaseAbility;
 class UK_BaseClawAttackAbility;
 
@@ -22,6 +24,9 @@ class AK_BaseCharacter : public ACharacter
 
 public:
 	FK_EventOnCharacterDied EventOnCharacterDied;
+
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerStart")
+	const TSubclassOf<APlayerStart> PlayerStart;
 
 	// All Effects (The shortest way - is a timer, when 0 - is disable)
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Effects")
@@ -53,9 +58,13 @@ protected:
 
 	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadWrite, Category = "CharacterData")
 	FK_FloatParameter Health;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float HealthForWolf = 800.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float HealthForOthers = 200.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float RespawnRate = 5.0f;
+	float RespawnRate = 2.0f;
 
 private:
     UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
@@ -104,7 +113,8 @@ protected:
 	
 	void TurnRight(float Rate); // use this function for update rotation to target rotation on server side
 
-	virtual void OnCharacterDied();
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	virtual void Server_OnCharacterDied();
 	virtual bool CanActivateAbilityCheck(UK_BaseAbility* Ability);
 	
 	UK_BaseCharacterAnimInstance* GetAnimInstance() const { return Cast<UK_BaseCharacterAnimInstance>(GetMesh()->GetAnimInstance()); }
@@ -122,6 +132,7 @@ protected:
 	virtual void OnHealthChanged(float OldHealth, float NewHealth);
 
 private:
+	UFUNCTION(NetMulticast, Reliable)
 	void RespawnPlayer();		
 
 	void UpdateVisibilityOfTeammates(); // Using for UK_BaseIntimidationAbility
