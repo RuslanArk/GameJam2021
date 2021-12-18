@@ -18,6 +18,8 @@ class PINGLEGAMEJAM_API UGJGameInstance : public UGameInstance, public IMenuInte
 public:
 	UGJGameInstance(const FObjectInitializer& ObjectInitializer);
 
+	TArray<FTransform> PlayerStarts;
+
 	virtual void Init();
 
 	UFUNCTION(BlueprintCallable)

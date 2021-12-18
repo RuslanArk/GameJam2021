@@ -21,7 +21,6 @@ AK_LobbyGameMode::AK_LobbyGameMode()
 void AK_LobbyGameMode::StartPlay()
 {
 	Super::StartPlay();
-
 }
 
 void AK_LobbyGameMode::PostLogin(APlayerController* NewPlayer)
@@ -36,16 +35,22 @@ void AK_LobbyGameMode::PostLogin(APlayerController* NewPlayer)
 		}
 		
 		TArray<AActor*> FoundStarts;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), PlayerStart, FoundStarts);		
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), PlayerStart, FoundStarts);
 		if (FoundStarts.Num() > 0)
 		{
+			UGJGameInstance* GameInstance = Cast<UGJGameInstance>(GetWorld()->GetGameInstance());
 			int32 Index = 0;
 			for (AActor* Start : FoundStarts)
 			{
 				SpawnSpots.Add(Start->GetActorTransform());
 				SpawnIsTaken.Add(Index, false);
 				Index++;
+				if (GameInstance)
+				{
+					GameInstance->PlayerStarts.Add(Start->GetActorTransform());
+				}
 			}
+			
 		}
 		
 		CycleIsDone = true;
@@ -57,7 +62,9 @@ void AK_LobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	
 	if (NumberOfPlayers == 4)
 	{
-		GetWorldTimerManager().SetTimer(ServerTravelTimer, this, &AK_LobbyGameMode::StartGame, 5.0f);		
+		
+		GetWorldTimerManager().SetTimer(ServerTravelTimer, this, &AK_LobbyGameMode::StartGame, 5.0f);
+		//GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &AK_LobbyGameMode::RespawnPlayers, 3.0f, true, 5.0f);
 	}
 }
 
@@ -75,10 +82,10 @@ void AK_LobbyGameMode::StartGame()
 
 	GameInstance->StartSession();
 	
-	UWorld* World = GetWorld();
+	/*UWorld* World = GetWorld();
 	if (!World) return;
 
-	/*bUseSeamlessTravel = true;
+	bUseSeamlessTravel = true;
 	World->ServerTravel("/Game/Maps/Build1?Listen", true);
 	CycleIsDone = false;*/
 }
@@ -95,6 +102,7 @@ void AK_LobbyGameMode::SpawnActorForNewcomer(APlayerController* NewPlayer)
 			NewPlayer->UnPossess();
 			NewPlayer->Possess(NewCharacter);
 			NewCharacter->FinishSpawning(SpawnSpot);
+			
 			AK_BasePlayerState* PlayerState = NewPlayer->GetPlayerState<AK_BasePlayerState>();
 			if (PlayerState)
 			{
@@ -103,8 +111,7 @@ void AK_LobbyGameMode::SpawnActorForNewcomer(APlayerController* NewPlayer)
 				{
 					PlayerState->IsWolf = true;
 				}
-			}
-			
+			}			
 		}
 	}
 }
@@ -139,7 +146,42 @@ FTransform AK_LobbyGameMode::FindSpawnSpot()
 	return FindSpawnSpot();
 }
 
-void AK_LobbyGameMode::RespawnPlayer(APlayerController* PlayerToRespawn)
+void AK_LobbyGameMode::RespawnPlayers()
 {
-	// ..
+	if (SpawnedControllers.Num() <= 0)
+	{
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ControllerClass, SpawnedControllers);
+		RespawnAllDeadPlayers();
+		return;
+	}
+	
+	RespawnAllDeadPlayers();
+}
+
+void AK_LobbyGameMode::RespawnAllDeadPlayers()
+{
+	for (AActor* Player : SpawnedControllers)
+	{
+		AK_BasePlayerController* PController = Cast<AK_BasePlayerController>(Player);
+		if (!PController) continue;
+		AK_BasePlayerState* CurrentPlayerState = PController->GetPlayerState<AK_BasePlayerState>();
+		if (!CurrentPlayerState || !CurrentPlayerState->GetCharacter() || !CurrentPlayerState->IsDead) continue;	
+		TSubclassOf<AK_BaseCharacter> PlayerClass = CurrentPlayerState->GetCharacter()->GetClass();
+		if (!PlayerClass) continue;
+	
+		FTransform SpawnSpot = PController->FindSpawnPlace();
+		AK_BaseCharacter* CharacterToSpawn = GetWorld()->SpawnActorDeferred<AK_BaseCharacter>(PlayerClass, SpawnSpot);
+		if (CharacterToSpawn)
+		{
+			if (PController->GetPawn())
+			{
+				PController->GetPawn()->SetLifeSpan(0.5f);
+				PController->UnPossess();
+			}
+			CurrentPlayerState->IsDead = false;
+			PController->Possess(CharacterToSpawn);
+			CharacterToSpawn->FinishSpawning(SpawnSpot);
+		}
+	}
+	SpawnedControllers.Empty();
 }

@@ -1,12 +1,16 @@
 
 #include "K_BaseCharacter.h"
 
+#include "K_BasePlayerController.h"
 #include "K_BasePlayerState.h"
 #include "Camera/CameraComponent.h"
 #include "Math/UnrealMathUtility.h"
 #include "Components/CapsuleComponent.h"
 #include "Framework/MultiBox/ToolMenuBase.h"
 #include "Components/SphereComponent.h"
+#include "GameFramework/PlayerStart.h"
+
+#include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -14,6 +18,7 @@
 
 #include "PingleGameJam/Player/Abilities/K_BaseAbility.h"
 #include "PingleGameJam/Player/Abilities/Wolf/ClawAttack/K_BaseClawAttackAbility.h"
+#include "PingleGameJam/GJGameInstance.h"
 
 
 DEFINE_LOG_CATEGORY_STATIC(LogK_BaseCharacter, All, All);
@@ -105,7 +110,6 @@ void AK_BaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	EventOnCharacterDied.AddUObject(this, &AK_BaseCharacter::OnCharacterDied);
 	Health.OnParameterChanged.AddDynamic(this, &AK_BaseCharacter::OnHealthChanged);
 
 	if (MainAbilityClass)
@@ -202,24 +206,45 @@ void AK_BaseCharacter::TurnRight(float Value)
 	}
 }
 
-void AK_BaseCharacter::OnCharacterDied()
+void AK_BaseCharacter::Server_OnCharacterDied_Implementation()
 {
-	//TODO: play death animation
-	if (GetMovementComponent())
+	UGJGameInstance* GameInstance = Cast<UGJGameInstance>(GetWorld()->GetGameInstance());
+	AK_BasePlayerState* CurrentPlayerState = Cast<AK_BasePlayerState>(GetPlayerState());
+	if (!CurrentPlayerState) return;
+	int32 Index = FMath::RandRange(0, GameInstance->PlayerStarts.Num() - 1);
+	SetActorLocation(GameInstance->PlayerStarts[Index].GetLocation());
+	if (CurrentPlayerState->IsWolf)
 	{
-		GetMovementComponent()->StopMovementImmediately();		
+		Health.SetData(HealthForWolf);
 	}
-	SetActorEnableCollision(false);	
-	SetLifeSpan(5.0f);
+	else
+	{
+		Health.SetData(HealthForOthers);
+	}
 
-	GetWorldTimerManager().SetTimer(RespawnTimer, this, &AK_BaseCharacter::RespawnPlayer, RespawnRate);
-	
+	//TODO: play death animation
 	EventOnCharacterDied.Broadcast();
 }
 
-void AK_BaseCharacter::RespawnPlayer()
+void AK_BaseCharacter::RespawnPlayer_Implementation()
 {
-	
+	TArray<AActor*> FoundStarts;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), PlayerStart, FoundStarts);
+	if (FoundStarts.Num() > 0)
+	{
+		AK_BasePlayerState* CurrentPlayerState = Cast<AK_BasePlayerState>(GetPlayerState());
+		if (!CurrentPlayerState) return;
+		int32 Index = FMath::RandRange(0, FoundStarts.Num() - 1);
+		SetActorLocation(FoundStarts[Index]->GetActorLocation());
+		if (CurrentPlayerState->IsWolf)
+		{
+			Health.SetData(HealthForWolf);
+		}
+		else
+		{
+			Health.SetData(HealthForOthers);
+		}
+	}
 }
 
 bool AK_BaseCharacter::CanActivateAbilityCheck(UK_BaseAbility* Ability)
@@ -252,7 +277,7 @@ void AK_BaseCharacter::OnHealthChanged(float OldHealth, float NewHealth)
 {
 	if (NewHealth <= 0)
 	{
-		OnCharacterDied();
+		Server_OnCharacterDied();
 	}
 }
 
