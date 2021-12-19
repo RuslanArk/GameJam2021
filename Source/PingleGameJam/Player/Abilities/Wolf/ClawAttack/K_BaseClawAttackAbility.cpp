@@ -3,6 +3,7 @@
 #include "DrawDebugHelpers.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "PingleGameJam/Player/K_BaseCharacter.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogK_MeleeAbility, All, All);
@@ -10,7 +11,7 @@ DEFINE_LOG_CATEGORY_STATIC(LogK_MeleeAbility, All, All);
 UK_BaseClawAttackAbility::UK_BaseClawAttackAbility()
 {
 	AbilityCollision = CreateDefaultSubobject<USphereComponent>(TEXT("AbilityCollisionComp"));
-	AbilityCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	AbilityCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	AbilityCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	AbilityCollision->InitSphereRadius(90.0f);
 }
@@ -62,9 +63,23 @@ void UK_BaseClawAttackAbility::OnClawBeginOverlap(UPrimitiveComponent* Overlappe
 void UK_BaseClawAttackAbility::OverlapTick()
 {
 	DrawDebugSphere(GetWorld(), AbilityCollision->GetComponentLocation(), 20, 4, FColor::Purple, true, 2.0f);
+	UE_LOG(LogK_MeleeAbility, Warning, TEXT("OverlapTick"));
 	
 	if (AbilityCollision)
 	{
+		TArray<AActor*> FoundActors;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AK_BaseCharacter::StaticClass(), FoundActors);
+
+		for (auto OtherActor : FoundActors)
+		{
+			if (OtherActor && OtherActor != MyOwner && FVector::Distance(OtherActor->GetActorLocation(), MyOwner->GetActorLocation()) < 200)
+			{
+				UE_LOG(LogK_MeleeAbility, Warning, TEXT("Melee ability might cause damage"));
+				OtherActor->TakeDamage(GetDamageAmount(), {}, MyOwner->GetController(), MyOwner);
+			}
+		}
+
+		/*
 		TArray<AActor*> OverlappedActors;
 		AbilityCollision->GetOverlappingActors(OverlappedActors, AK_BaseCharacter::StaticClass());
 
@@ -80,6 +95,7 @@ void UK_BaseClawAttackAbility::OverlapTick()
 				}
 			}
 		}
+		*/
 	}
 }
 
