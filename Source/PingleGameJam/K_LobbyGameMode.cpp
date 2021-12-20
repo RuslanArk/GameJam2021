@@ -98,12 +98,15 @@ void AK_LobbyGameMode::SpawnActorForNewcomer(APlayerController* NewPlayer)
 		AK_BaseCharacter* NewCharacter = GetWorld()->SpawnActorDeferred<AK_BaseCharacter>(GiveRandomRole(), SpawnSpot);
 		if (NewCharacter)
 		{
-			NewPlayer->GetPawn()->SetLifeSpan(1.0f);
-			NewPlayer->UnPossess();
+			if (NewPlayer->GetPawn())
+			{
+				NewPlayer->GetPawn()->SetLifeSpan(1.0f);
+				NewPlayer->UnPossess();
+			}			
 			NewPlayer->Possess(NewCharacter);
 			NewCharacter->FinishSpawning(SpawnSpot);
 			
-			AK_BasePlayerState* PlayerState = NewPlayer->GetPlayerState<AK_BasePlayerState>();
+			/*AK_BasePlayerState* PlayerState = NewPlayer->GetPlayerState<AK_BasePlayerState>();
 			if (PlayerState)
 			{
 				PlayerState->SetCharacter(NewCharacter);
@@ -111,7 +114,7 @@ void AK_LobbyGameMode::SpawnActorForNewcomer(APlayerController* NewPlayer)
 				{
 					PlayerState->IsWolf = true;
 				}
-			}			
+			}*/	
 		}
 	}
 }
